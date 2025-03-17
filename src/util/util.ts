@@ -66,6 +66,7 @@ export const DPV = createVocabulary(
     "Purpose",
     "Personalisation",
     "ServiceProvision",
+    "PublicBenefit",
     "Marketing"
 )
 

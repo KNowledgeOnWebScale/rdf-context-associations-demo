@@ -7,10 +7,8 @@ import { DPV, postResource, putResource } from "./util/util";
 import { importPrivateKey } from "./util/signature/sign";
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 
-type SignatureInfo = { webId: string, privateKey: string, publicKey: string }
-// type PolicyInfo = { explanation: string, purpose: {duration: string, purpose: string[]} }
-
-const signatureOptions: Map<string, SignatureInfo | undefined > = new Map([
+type SignatureParams = { webId: string, privateKey: string, publicKey: string }
+const signatureOptions: Map<string, SignatureParams | undefined > = new Map([
     ["None", undefined],
     ["Ruben", { 
         webId: "https://pod.rubendedecker.be/profile/card#me", 
@@ -287,7 +285,7 @@ const ContextInterface = () => {
 
             <FormControl fullWidth>
                 <InputLabel htmlFor="resource-location">Resource Location</InputLabel>
-                <Input id="resource-location" readOnly value={ resourceLocation }/>
+                <Input id="resource-location" readOnly value={ resourceLocation } onChange={ handleSourceChange } />
                 
             </FormControl>
                 
