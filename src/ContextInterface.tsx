@@ -3,7 +3,7 @@ import { Box, Button, Checkbox, FormControlLabel, FormGroup, FormHelperText, Inp
 import FormControl from '@mui/material/FormControl';
 import { Builder } from "./util/caBuilder";
 import { serializeTrigFromStore } from "./util/trigUtils";
-import { DPV } from "./util/util";
+import { DPV, postResource, putResource } from "./util/util";
 import { importPrivateKey } from "./util/signature/sign";
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 
@@ -55,14 +55,15 @@ const ContextInterface = () => {
     // const [authorId, setAuthorId] = useState("https://pod.rubendedecker.be/profile/card#me")
     // const handleAuthorChange = (event: ChangeEvent<HTMLInputElement>) => { setAuthorId(event.target.value) };
 
-    const [targetId, setTargetOd] = useState("https://pod.rubendedecker.be/public")
-    const handleTargetChange = (event: ChangeEvent<HTMLInputElement>) => { setTargetOd(event.target.value) };
+    const [targetId, setTargetId] = useState("https://pod.rubendedecker.be/public")
+    const handleTargetChange = (event: ChangeEvent<HTMLInputElement>) => { setTargetId(event.target.value) };
+
+    const [resourceLocation, setResourceLocation] = useState("")
 
     const showAuthorField = (): string => {
         if (signatureId === "None") return "Select a signature to set the author"
         else return signatureOptions.get(signatureId)?.webId || ""
     }
-
 
     // const contextualizedInput = `roots in a piece of classical Latin literature from 45 BC, making it over 2000 years old. 
     //                 Richard McClintock, a Latin professor at Hampden-Sydney College in Virginia, looked up one of the more obscure Latin words, consectetur, from a Lorem Ipsum passage, and going through the cites of the word in classical literature, discovered the undoubtable source. Lorem Ipsum comes from sections 1.10.32 and 1.10.33 of "de Finibus Bonorum et Malorum" (The Extremes of Good and Evil) by Cicero, written in 45 BC. This book is a treatise on the theory of ethics, 
@@ -125,6 +126,20 @@ const ContextInterface = () => {
             .then(() => alert("Copied to clipboard!"))
             .catch((err) => console.error("Failed to copy:", err));
     };
+
+    const enableContentInteractions = () => { return !processedDocument}
+
+    const handlePostResource = async () => {
+        const location = await postResource(targetId, processedDocument)
+        if(location) setResourceLocation(location) 
+        else alert("Something went wrong uploading the resource!")
+    }
+
+    const handlePutResource = async () => {
+        const location = await putResource(targetId, processedDocument)
+        if(location) setResourceLocation(location) 
+        else alert("Something went wrong uploading the resource!")
+    }
 
     return ( 
         <Box>
@@ -235,6 +250,7 @@ const ContextInterface = () => {
                         color="primary" 
                         startIcon={<ContentCopyIcon />} 
                         onClick={handleCopyToClipboard}
+                        disabled={enableContentInteractions()}
                     >
                         Copy to Clipboard
                     </Button>
@@ -261,10 +277,20 @@ const ContextInterface = () => {
 
             <FormControl fullWidth>
                 <Box display="flex" gap={2}>
-                    <Button fullWidth variant="contained">POST</Button>
-                    <Button fullWidth variant="contained">PUT</Button>
+                    <Button fullWidth variant="contained" onClick={handlePostResource} disabled={enableContentInteractions()}>POST</Button>
+                    <Button fullWidth variant="contained" onClick={handlePutResource} disabled={enableContentInteractions()}>PUT</Button>
                 </Box>
             </FormControl>
+
+            <br />
+            <br />
+
+            <FormControl fullWidth>
+                <InputLabel htmlFor="resource-location">Resource Location</InputLabel>
+                <Input id="resource-location" readOnly value={ resourceLocation }/>
+                
+            </FormControl>
+                
         </Box>
     )
 }

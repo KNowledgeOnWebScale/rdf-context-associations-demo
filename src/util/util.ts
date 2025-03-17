@@ -148,3 +148,21 @@ export function renameGraph( store: Store, source: Quad_Graph, target?: NamedNod
     return { store, graph: target}   
 }
 
+export async function postResource(target: string, body: string) {
+    const res = await fetch(target, {
+        method: "POST",
+        headers: { "Content-Type": "text/trig" },
+        body: body,
+    })
+    return res.headers.get('Location')
+}
+
+export async function putResource(target: string, body: string) {
+    const res = await fetch(target, {
+        method: "PUT",
+        headers: { "Content-Type": "text/trig" },
+        body: body,
+    })
+    return res.headers.get('Location')
+}
+
