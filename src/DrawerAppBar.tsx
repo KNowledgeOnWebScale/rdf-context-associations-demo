@@ -15,6 +15,8 @@ import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 
+import { Route, Routes } from "react-router-dom";
+
 import Home from './Home';
 import ContextInterface from './ContextInterface';
 import ProcessingInterface from './ProcessingInterface';
@@ -32,11 +34,17 @@ interface Props {
 const title = "RDF Context Associations Demonstrator"
 
 const drawerWidth = 240;
-const navItems = new Map<string, { text: string, page: React.FC }>([
-    ['home', { text: 'Home', page: Home}],
-    ['context', { text: 'Contextualization Interface', page: ContextInterface }],
-    ['processing', { text: 'Processing Interface', page: ProcessingInterface}],
-    ['links', { text: 'Links', page: Links}]  
+// const navItems = new Map<string, { text: string, page: React.FC }>([
+//     ['home', { text: 'Home', page: Home}],
+//     ['context', { text: 'Contextualization Interface', page: ContextInterface }],
+//     ['processing', { text: 'Processing Interface', page: ProcessingInterface}],
+//     ['links', { text: 'Links', page: Links}]  
+// ]);
+const navItems = new Map<string, string>([
+    ['Home', "/"],
+    ['Context', "/context"],
+    ['Processing', "/processing"],
+    ['Links', "/links"]
 ]);
 
 export default function DrawerAppBar(props: Props) {
@@ -47,9 +55,10 @@ export default function DrawerAppBar(props: Props) {
         setMobileOpen((prevState) => !prevState);
     };
 
-    const [currentPage, setCurrentPage] = React.useState('home');
+    // const [currentPage, setCurrentPage] = React.useState('home');
     
-    const PageComponent = navItems.get(currentPage)?.page; // Get the component reference
+    // @ts-ignore
+    // const PageComponent = navItems.get(currentPage)?.page; // Get the component reference
 
 
     const drawer = (
@@ -59,10 +68,10 @@ export default function DrawerAppBar(props: Props) {
         </Typography>
         <Divider />
         <List>
-            {Array.from(navItems.entries()).map(([id, pageObj]) => (
-            <ListItem key={id} disablePadding>
-                <ListItemButton sx={{ textAlign: 'left' }} onClick={(_ignored) => setCurrentPage(id)}>
-                <ListItemText primary={pageObj.text} />
+            {Array.from(navItems.entries()).map(([title, link]) => (
+            <ListItem key={title} disablePadding>
+                <ListItemButton sx={{ textAlign: 'left' }} href={link} /*onClick={(_ignored) => setCurrentPage(id)}*/>
+                    <ListItemText primary={title} />
                 </ListItemButton>
             </ListItem>
             ))}
@@ -95,9 +104,9 @@ export default function DrawerAppBar(props: Props) {
                 {title}
             </Typography>
             <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
-                {Array.from(navItems.entries()).map(([id, pageObj]) => (
-                <Button key={id} sx={{ color: '#fff' }} onClick={(_ignored) => setCurrentPage(id)}>
-                    {pageObj.text}
+                {Array.from(navItems.entries()).map(([title, link]) => (
+                <Button key={title} sx={{ color: '#fff', ":hover": {color: '#faa'}, fontWeight: "bold" }} href={link} /*onClick={(_ignored) => setCurrentPage(id)}*/>
+                    { title }
                 </Button>
                 ))}
             </Box>
@@ -122,7 +131,12 @@ export default function DrawerAppBar(props: Props) {
         </nav>
         <Box component="main" sx={{ p: 3 }}>
             <Toolbar />
-            {PageComponent && <PageComponent />} {/* Render the component properly */}
+            <Routes>
+                <Route path="/context" element={<ContextInterface />} />
+                <Route path="/process" element={<ProcessingInterface />} />
+                <Route path="/links" element={<Links />} />
+                <Route path='/' element={<Home />} />
+            </Routes>
         </Box>
         </Box>
     );
