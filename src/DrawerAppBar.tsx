@@ -32,37 +32,37 @@ interface Props {
 const title = "RDF Context Associations Demonstrator"
 
 const drawerWidth = 240;
-const navItems = new Map([
-    ['Home', Home],
-    ['Contextualization Interface', ContextInterface], 
-    ['Processing Interface', ProcessingInterface],
-    ['Links', Links]
+const navItems = new Map<string, { text: string, page: React.FC }>([
+    ['home', { text: 'Home', page: Home}],
+    ['context', { text: 'Contextualization Interface', page: ContextInterface }],
+    ['processing', { text: 'Processing Interface', page: ProcessingInterface}],
+    ['links', { text: 'Links', page: Links}]  
 ]);
 
 export default function DrawerAppBar(props: Props) {
     const { window } = props;
     const [mobileOpen, setMobileOpen] = React.useState(false);
-    const [selectedComponent, setSelectedComponent] = React.useState(Home());
 
     const handleDrawerToggle = () => {
         setMobileOpen((prevState) => !prevState);
     };
 
-    const handlePageSelect = (selectedPage: () => JSX.Element) => {
-        setSelectedComponent(selectedPage())
-    }
+    const [currentPage, setCurrentPage] = React.useState('home');
+    
+    const PageComponent = navItems.get(currentPage)?.page; // Get the component reference
+
 
     const drawer = (
-        <Box onClick={handleDrawerToggle} sx={{ textAlign: 'left' }}>
-        <Typography component={'div'} align='left' textAlign={'left'} style={{marginLeft: 0}} variant="h6" sx={{ my: 2, pl: 2  }}>
+        <Box onClick={handleDrawerToggle}>
+        <Typography display='block' variant="h6" sx={{ my: 2, pl: 2 }}>
                 {title}
         </Typography>
         <Divider />
         <List>
-            {Array.from(navItems.entries()).map(([title, page]) => (
-            <ListItem key={title} disablePadding>
-                <ListItemButton sx={{ textAlign: 'left' }} onClick={(_ignored) => handlePageSelect(page)}>
-                <ListItemText primary={title} />
+            {Array.from(navItems.entries()).map(([id, pageObj]) => (
+            <ListItem key={id} disablePadding>
+                <ListItemButton sx={{ textAlign: 'left' }} onClick={(_ignored) => setCurrentPage(id)}>
+                <ListItemText primary={pageObj.text} />
                 </ListItemButton>
             </ListItem>
             ))}
@@ -89,14 +89,15 @@ export default function DrawerAppBar(props: Props) {
             <Typography
                 variant="h6"
                 component="div"
-                sx={{ flexGrow: 1, display: { xs: 'none', sm: 'block' } }}
+                textAlign='left' 
+                sx={{ flexGrow: 1, display: { xs: 'none', sm: 'block' }, textAlign: 'left' }}
             >
                 {title}
             </Typography>
             <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
-                {Array.from(navItems.entries()).map(([title, page]) => (
-                <Button key={title} sx={{ color: '#fff' }} onClick={(_ignored) => handlePageSelect(page)}>
-                    {title}
+                {Array.from(navItems.entries()).map(([id, pageObj]) => (
+                <Button key={id} sx={{ color: '#fff' }} onClick={(_ignored) => setCurrentPage(id)}>
+                    {pageObj.text}
                 </Button>
                 ))}
             </Box>
@@ -121,7 +122,7 @@ export default function DrawerAppBar(props: Props) {
         </nav>
         <Box component="main" sx={{ p: 3 }}>
             <Toolbar />
-            {selectedComponent}
+            {PageComponent && <PageComponent />} {/* Render the component properly */}
         </Box>
         </Box>
     );
