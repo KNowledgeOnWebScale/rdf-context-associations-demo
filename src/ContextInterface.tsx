@@ -1,10 +1,11 @@
 import { ChangeEvent, useState } from "react";
-import { Box, Button, FormHelperText, Input, InputLabel, MenuItem, Select, SelectChangeEvent, TextareaAutosize, Typography } from "@mui/material"
+import { Box, Button, Checkbox, FormControlLabel, FormGroup, FormHelperText, Input, InputLabel, MenuItem, Select, SelectChangeEvent, TextareaAutosize, Typography } from "@mui/material"
 import FormControl from '@mui/material/FormControl';
 import { Builder } from "./util/caBuilder";
 import { serializeTrigFromStore } from "./util/trigUtils";
 import { DPV } from "./util/util";
 import { importPrivateKey } from "./util/signature/sign";
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 
 type SignatureInfo = { webId: string, privateKey: string, publicKey: string }
 // type PolicyInfo = { explanation: string, purpose: {duration: string, purpose: string[]} }
@@ -39,6 +40,9 @@ const ContextInterface = () => {
 
     const [sourceId, setSourceId] = useState("https://pod.rubendedecker.be/profile/card#me")
     const handleSourceChange = (event: ChangeEvent<HTMLInputElement>) => { setSourceId(event.target.value) };
+
+    const [originCheckbox, setOriginCheckBox] = useState(true)
+    const handleGraphOriginChange = (event: ChangeEvent<HTMLInputElement>) => { setOriginCheckBox(event.target.checked) };
 
     const [signatureId, setSignatureId] = useState("None");
     const handleSignatureChange = (event: SelectChangeEvent) => { 
@@ -78,13 +82,13 @@ const ContextInterface = () => {
 
         let author;
         let selectedSignature;
-        console.log('BEFORE', selectedSignatureIdentity, !!selectedSignatureIdentity)
+        
         if(selectedSignatureIdentity) {
-            console.log('AFTER')
+        
             const privateKeyResource = selectedSignatureIdentity.privateKey
             const privateKeyJSON = await (await fetch(privateKeyResource)).json()
             const privateKey = await importPrivateKey(privateKeyJSON as JsonWebKey)
-            console.log('private key', privateKey.toString())
+            
             selectedSignature = {
                 privateKey: privateKey, 
                 issuer: selectedSignatureIdentity.webId, 
@@ -93,18 +97,10 @@ const ContextInterface = () => {
             author = selectedSignatureIdentity.webId
         }
 
-        console.log('Input')
-        console.log('signature', selectedSignature)
-        console.log('policy', selectedPolicy)
-        console.log('provenance', origin, author)
-
-        console.log()
-        console.log("### STARTING BUILDER ###")
-        console.log()
         let builder = selectedSignatureIdentity ? new Builder(selectedSignature) : new Builder();
         builder = await builder
             .startSession()
-            .loadRDF(sourceId)
+            .loadRDF(sourceId, originCheckbox)
             .provenance({origin: sourceId, author})
         
         // Handle policy entry
@@ -123,6 +119,13 @@ const ContextInterface = () => {
         setProcessedDocument(text)
     }
 
+
+    const handleCopyToClipboard = () => {
+        navigator.clipboard.writeText(processedDocument)
+            .then(() => alert("Copied to clipboard!"))
+            .catch((err) => console.error("Failed to copy:", err));
+    };
+
     return ( 
         <Box>
             <Typography variant="h2">Contextualization Interface</Typography>
@@ -136,6 +139,9 @@ const ContextInterface = () => {
                 <InputLabel htmlFor="source-input">Source URL</InputLabel>
                 <Input id="source-input" aria-describedby="source-input-helper" value={ sourceId } onChange={ handleSourceChange } />
                 <FormHelperText id="source-input-helper">URI of the Linked Data Document.</FormHelperText>
+                <FormGroup>
+                    <FormControlLabel control={<Checkbox checked={originCheckbox} onChange={ handleGraphOriginChange }/>} label="Interpret Graph Names as Origin" />
+            </FormGroup>
             </FormControl>
                 
             <br />
@@ -195,7 +201,7 @@ const ContextInterface = () => {
 
             {/* self-set author provenance */}
             <FormControl fullWidth>
-                <Input id="origin-input" aria-describedby="author-input-helper" value={ showAuthorField() } /*value={ authorId } onChange={ handleAuthorChange }*/ />
+                <Input id="origin-input" aria-describedby="author-input-helper" value={ showAuthorField() } disabled /*value={ authorId } onChange={ handleAuthorChange }*/ />
                 <FormHelperText id="author-input-helper">Author of resulting statements.</FormHelperText>
             </FormControl>
 
@@ -216,7 +222,23 @@ const ContextInterface = () => {
             <br />
 
             <FormControl fullWidth>
-                <TextareaAutosize minRows={5} maxRows={15} readOnly value={processedDocument} />
+                <TextareaAutosize minRows={8} maxRows={20} readOnly value={processedDocument} />
+            </FormControl>
+
+            <br />
+
+            {/* Copy Button */}
+            <FormControl fullWidth>
+                <Box display="flex" gap={2}>
+                    <Button 
+                        variant="contained" 
+                        color="primary" 
+                        startIcon={<ContentCopyIcon />} 
+                        onClick={handleCopyToClipboard}
+                    >
+                        Copy to Clipboard
+                    </Button>
+                </Box>
             </FormControl>
 
 

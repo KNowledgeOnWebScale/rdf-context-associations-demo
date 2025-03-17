@@ -46,14 +46,12 @@ export class Builder {
     }
 
     loadRDF(url: string, interpretQuadAsOrigin?: boolean): Builder {
-        console.log('loadRDF', this.session)
         if (!this.session) { 
             log({ level: "info", message: 'No session found, starting new session!' })
             this.startSession()
             return this.loadRDF(url)
         }
         const loadRDFResourceTask = async (store: FocusRDFStore): Promise<FocusRDFStore> => {
-            console.log('loading RDF')
             if (! await isRDFResource(url)) throw new Error('Cannot load non-rdf resources as RDf.')
             let loadedQuads = await (getResourceAsQuadArray(url)) as Quad[];
             
@@ -61,13 +59,14 @@ export class Builder {
             for (let loadedQuad of loadedQuads) {
                 const graph = loadedQuad.graph
                 const bngName = this.cachedMappings.get(graph.value)
+                console.log(graph.value, bngName)
                 if (graph.termType === "NamedNode") {
                     if (!bngName) {
                         graphName = blankNode()
                         // directly add metadata to metadata graph
                         this.cachedMappings.set(graph.value, graphName)
                         if(interpretQuadAsOrigin) {
-                            store.addMetadataTriples([quad(graphName, namedNode(PROVENANCE.origin), graphName)])
+                            store.addMetadataTriples([triple(graphName, namedNode(PROVENANCE.origin), graph as NamedNode)])
                         }
                     } else { graphName = bngName; }
                 } else {
@@ -76,8 +75,8 @@ export class Builder {
                         this.cachedMappings.set(graph.value, graphName)
                     } else { graphName = bngName; }
                 }
+                store.addQuads([quad(loadedQuad.subject, loadedQuad.predicate, loadedQuad.object, graphName)])
             }
-            store.addQuads(loadedQuads.map(q => quad(q.subject, q.predicate, q.object, graphName)))
             // let r = renameAllGraphsInStore(resStore, undefined, { namePredicate: options?.namePredicate, origin: url })
             // // r.defaultGraph = the new renamed default graph blank node identifier
             // store.addQuads( r.store.getQuads(null, null, null, null), r.defaultGraph  )
@@ -88,12 +87,10 @@ export class Builder {
     }
 
     signData(): Builder {
-        console.log('signData', this.session)
         if (!this.session) { log({ level: "info", message: 'no session found, nothing to sign!' }); return this; }
         if (!this.signatureOptions) { log({ level: "error", message: 'Cannot create signature, incomplete signatureOptions parameter!' }); return this; }
 
         const signRDFContents = async (store: FocusRDFStore): Promise<FocusRDFStore> => {
-            console.log('signing data')
             if (!this.signatureOptions) throw new Error('Not all information provided to create valid signatures.')
             const dataGraphs = store.getDataGraphs();
             if (!dataGraphs.length) { log({ level: "warn", message: 'Cannot create signature when no data is added first!'}); return store; }
@@ -110,12 +107,10 @@ export class Builder {
     }
 
     signMetaData(): Builder {
-        console.log('signMetadata', this.session)
         if (!this.session) { log({ level: "info", message: 'no session found, nothing to sign!' }); return this; }
         if (!this.signatureOptions) { log({ level: "error", message: 'Cannot create metadata signature, incomplete signatureOptions parameter!' }); return this; }
 
         const signRDFContents = async (store: FocusRDFStore): Promise<FocusRDFStore> => {
-            console.log('signing metadata')
             if (!this.signatureOptions) throw new Error('Not all information provided to create valid signatures.')
             const metadataGraph = store.getMetadataGraph();
             if (!metadataGraph) { log({ level: "warn", message: 'Cannot create signature when no data is added first!'}); return store; }
@@ -138,14 +133,12 @@ export class Builder {
     // signMetadata
 
     policy(options: {duration?: string, purpose?: string[], assigner?: string, assignee?: string}): Builder {
-        console.log('policy', this.session)
         let {duration, purpose, assigner, assignee} = options
         if (!duration) duration = "P7D"
 
         if (!this.session) { log({ level: "info", message: 'no session found, nothing to set policy over!'}); return this; }
 
         const createPolicy = async (store: FocusRDFStore): Promise<FocusRDFStore> => {
-            console.log('creating policy')
             const dataGraphs = store.getDataGraphs();
             if (!dataGraphs.length) { log({ level: "warn", message: 'Cannot create signature when no data is present!'}); return store; }
             // We merge all targets as a single policy
@@ -164,14 +157,12 @@ export class Builder {
     }
 
     provenance(options?: { origin?: string, author?: string }): Builder {
-        console.log('provenance', this.session)
         if (!this.session) { log({ level: "info", message: 'no session found, nothing to add provenance over!'}); return this; }
         
         const origin = options && options.origin && namedNode(options.origin)
         const author = options && options.author && namedNode(options.author);
 
         const addProvenance = async (store: FocusRDFStore): Promise<FocusRDFStore> => {
-            console.log('adding provenance')
             const hasData = store.getDataGraphs().length;
             if (!hasData) { log({ level: "warn", message: 'Cannot create provenance without first adding data!'}); return store; }
 
