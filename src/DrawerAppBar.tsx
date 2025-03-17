@@ -40,7 +40,7 @@ const navItems = new Map([
 ]);
 
 export default function DrawerAppBar(props: Props) {
-    const { window, children } = props;
+    const { window } = props;
     const [mobileOpen, setMobileOpen] = React.useState(false);
     const [selectedComponent, setSelectedComponent] = React.useState(Home());
 
@@ -61,7 +61,7 @@ export default function DrawerAppBar(props: Props) {
         <List>
             {Array.from(navItems.entries()).map(([title, page]) => (
             <ListItem key={title} disablePadding>
-                <ListItemButton sx={{ textAlign: 'left' }} onClick={(element) => handlePageSelect(page)}>
+                <ListItemButton sx={{ textAlign: 'left' }} onClick={(_ignored) => handlePageSelect(page)}>
                 <ListItemText primary={title} />
                 </ListItemButton>
             </ListItem>
@@ -95,7 +95,7 @@ export default function DrawerAppBar(props: Props) {
             </Typography>
             <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
                 {Array.from(navItems.entries()).map(([title, page]) => (
-                <Button key={title} sx={{ color: '#fff' }} onClick={(element) => handlePageSelect(page)}>
+                <Button key={title} sx={{ color: '#fff' }} onClick={(_ignored) => handlePageSelect(page)}>
                     {title}
                 </Button>
                 ))}
