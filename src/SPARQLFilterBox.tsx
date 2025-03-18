@@ -5,6 +5,7 @@ import { evaluateQuerySync } from "./util/query";
 import { serializeTrigFromStore } from "./util/trigUtils";
 import { Store } from "n3";
 import { SignatureParams } from "./ProcessingInterface";
+import { MARGIN, SMALLMARGIN } from "./ContextInterface";
 
 
 export type FitlerInput = {
@@ -131,17 +132,25 @@ CONSTRUCT {
 
             {/* TODO Show SPARQL query used to filter sources */}
 
-            <br />
-            <Typography variant="h5">Filter Query</Typography>
-            <br />
+            <Typography  sx={{marginBottom: SMALLMARGIN, marginTop: MARGIN}} variant="h5" textAlign={"left"}>
+                Evaluated SPARQL query
+            </Typography>
+
+            <Typography textAlign={"left"} sx={{marginBottom: MARGIN}} color="darkblue">
+                This is the SPARQL query created from the filter requirements above.<br />
+            </Typography>
             
             <FormControl fullWidth>
                 <TextareaAutosize minRows={8} maxRows={20} value={query} />
             </FormControl>
+
+            <Typography  sx={{marginBottom: SMALLMARGIN, marginTop: MARGIN}} variant="h5" textAlign={"left"}>
+                Filtered data
+            </Typography>
             
-            <br />
-            <Typography variant="h5">Contextualized output</Typography>
-            <br />
+            <Typography textAlign={"left"} sx={{marginTop: MARGIN, marginBottom: MARGIN}} color="darkblue">
+                This is filtered data based on the above query.<br />
+            </Typography>
 
             <FormControl fullWidth>
                 <TextareaAutosize minRows={8} maxRows={20} value={serialized}/>

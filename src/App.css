@@ -1,8 +1,37 @@
 #root {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 2rem;
+  max-width: 1200px;
+  margin: auto;
   text-align: center;
+}
+
+main {
+  width: 100%;
+  padding: 0;
+  margin: auto;
+}
+
+@media (min-width: 0px) and (max-width: 1200px) {
+  #root {
+    width: 100%;
+    /* padding: 2rem; */
+    text-align: center;
+  }
+
+  main {
+    width: 100%;
+    padding: 0;
+    margin: 0;
+  }
+}
+
+nav {
+  width: 100vw!important;
+  left: 0!important;
+}
+
+h3 {
+  word-wrap: break-word;  /* Ensures words break if needed */
+  overflow-wrap: break-word; /* Similar to word-wrap, ensuring text doesn't overflow */
 }
 
 .logo {
@@ -44,8 +73,4 @@
 
 #page-title {
   text-align: left;
-}
-
-main {
-  width: 100%;
 }

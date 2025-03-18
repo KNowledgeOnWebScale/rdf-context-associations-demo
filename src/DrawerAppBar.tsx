@@ -103,7 +103,6 @@ export default function DrawerAppBar(props: Props) {
             </Box>
             </Toolbar>
         </AppBar>
-        <nav>
             <Drawer
             container={container}
             variant="temporary"
@@ -119,7 +118,6 @@ export default function DrawerAppBar(props: Props) {
             >
             {drawer}
             </Drawer>
-        </nav>
         <Box component="main" sx={{ p: 3 }}>
             <Toolbar />
             {PageComponent && <PageComponent />} {/* Render the component properly */}

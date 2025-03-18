@@ -7,8 +7,8 @@ import { DPV, postResource, putResource } from "./util/util";
 import { importPrivateKey } from "./util/signature/sign";
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 
-const MARGIN = "1.4em";
-const SMALLMARGIN = "0.7em";
+export const MARGIN = "1.4em";
+export const SMALLMARGIN = "0.7em";
 
 type SignatureParams = { webId: string, privateKey: string, publicKey: string }
 const signatureOptions: Map<string, SignatureParams | undefined > = new Map([
