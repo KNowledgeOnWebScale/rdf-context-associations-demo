@@ -1,9 +1,8 @@
-import { BlankNode, Quad_Object, Quad_Subject, Triple } from "n3"
+import { Quad_Object, Quad_Subject, Triple } from "n3"
 import { ODRL, RDF, XSD } from "@inrupt/vocab-common-rdf";
 import { v4 as uuidv4 } from 'uuid';
 import moment from "moment";
 import { DataFactory } from "n3";
-import { createRDFList } from "./trigUtils";
 
 const { namedNode, blankNode, literal, triple } = DataFactory;
 

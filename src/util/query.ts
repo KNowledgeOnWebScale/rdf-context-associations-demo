@@ -29,7 +29,7 @@ export async function evaluateQuerySync(targets: string[], query: string): Promi
             stream 
                 .on('data', (q: Quad) => quads.push(q) )
                 .on('error', (e: Error) => { reject(e) } )
-                .on('end', (q: Quad) => { resolve(quads) } )
+                .on('end', (_q: Quad) => { resolve(quads) } )
         })    
     })
 }

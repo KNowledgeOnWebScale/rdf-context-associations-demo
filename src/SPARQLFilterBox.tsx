@@ -1,10 +1,9 @@
 import { Box, Button, FormControl, TextareaAutosize, Typography } from "@mui/material"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { evaluateQuerySync } from "./util/query";
-import { Quad } from "rdf-js";
+// import { Quad } from "rdf-js";
 import { serializeTrigFromStore } from "./util/trigUtils";
 import { Store } from "n3";
-import { DPV } from "./util/util";
 import { SignatureParams } from "./ProcessingInterface";
 
 
@@ -16,10 +15,10 @@ export type FitlerInput = {
 }
 
 const SPARQLFilterBox = (props: { input: FitlerInput }) =>  {
-    const { sources, signingAuthor, origin, purpose: inputPurpose } = props.input
+    const { sources, signingAuthor, purpose: inputPurpose } = props.input
 
     const [query, setQuery] = useState<string>('')
-    const [triples, setTriples] = useState<Quad[]>([])
+    // const [triples, setTriples] = useState<Quad[]>([])
     const [serialized, setSerialized] = useState<string>("")
         
     const executeQuery = async(query: string, sources: string[]) => {
@@ -37,7 +36,7 @@ const SPARQLFilterBox = (props: { input: FitlerInput }) =>  {
         store.addQuads(quads)
         const outputTrig = await serializeTrigFromStore(store)
         console.log("output", outputTrig, quads)
-        setTriples(quads)
+        // setTriples(quads)
         setSerialized(outputTrig)
     }
 
