@@ -1,5 +1,5 @@
 import { ChangeEvent, useState } from "react";
-import { Box, Button, Checkbox, FormControlLabel, FormGroup, FormHelperText, InputLabel, List, ListItem, ListItemButton, ListItemText, MenuItem, Select, SelectChangeEvent, TextareaAutosize, TextField, Typography } from "@mui/material"
+import { Box, Button, Checkbox, FormControlLabel, FormGroup, FormHelperText, InputLabel, MenuItem, Select, SelectChangeEvent, TextareaAutosize, TextField, Typography } from "@mui/material"
 import FormControl from '@mui/material/FormControl';
 import { Builder } from "./util/caBuilder";
 import { serializeTrigFromStore } from "./util/trigUtils";
@@ -25,17 +25,17 @@ const signatureOptions: Map<string, SignatureParams | undefined > = new Map([
     }]
 ])
 
-const policyOptions: Map<string, any> = new Map([
-    ["None", undefined],
-    ["policy1", { 
-        explanation: "Allow use for service provision for 1 day.", 
-        policy: {duration: "P1D", purpose: [DPV.ServiceProvision] as string[]}
-    }],
-    ["policy2", { 
-        explanation: "Allow use for service provision, marketing and personalization for 1 month.", 
-        policy: {duration: "P1M", purpose: [DPV.ServiceProvision, DPV.Marketing, DPV.Personalisation] as string[]}
-    }],
-])
+// const policyOptions: Map<string, any> = new Map([
+//     ["None", undefined],
+//     ["policy1", { 
+//         explanation: "Allow use for service provision for 1 day.", 
+//         policy: {duration: "P1D", purpose: [DPV.ServiceProvision] as string[]}
+//     }],
+//     ["policy2", { 
+//         explanation: "Allow use for service provision, marketing and personalization for 1 month.", 
+//         policy: {duration: "P1M", purpose: [DPV.ServiceProvision, DPV.Marketing, DPV.Personalisation] as string[]}
+//     }],
+// ])
 
 const purposeOptions: Map<string, string | undefined > = new Map([
     ["None", undefined],
@@ -289,7 +289,7 @@ const ContextInterface = () => {
                         onChange={ handlePurposeChange }
                         aria-describedby="select-policy-helper"
                     >
-                        { Array.from(purposeOptions.entries()).map(([id, entry]) => 
+                        { Array.from(purposeOptions.entries()).map(([id, _entry]) => 
                             <MenuItem value={id}>{ id }</MenuItem>    
                         )}
                     </Select>
