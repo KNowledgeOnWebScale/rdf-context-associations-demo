@@ -247,90 +247,118 @@ const ContextInterface = () => {
                     The provenance information defined on the data is derived from <br />
                     the datasource provided above and the chosen signing author.
                 </Typography>
+                
+                <FormControl fullWidth sx={{marginBottom: MARGIN}}>
+                    <TextField 
+                        id="origin-input" 
+                        label="Data origin"
+                        value={ sourceId } 
+                        disabled 
+                        helperText={"Origin of resulting statements"}
+                    />
+                </FormControl>
+                
+                <FormControl fullWidth>
+                    <TextField 
+                        label="Data author"
+                        id="author-input"
+                        value={ showAuthorField() } 
+                        disabled 
+                        helperText={"Author of resulting statements"}
+                    />
+                </FormControl>
             </Box>
 
-            {/* auto-greyed-out origin provenance */}
-            <FormControl fullWidth>
-                <Input id="origin-input" aria-describedby="origin-input-helper" value={ sourceId } disabled />
-                <FormHelperText id="origin-input-helper">Origin of resulting statements.</FormHelperText>
-            </FormControl>
-
-            {/* self-set author provenance */}
-            <FormControl fullWidth>
-                <Input id="origin-input" aria-describedby="author-input-helper" value={ showAuthorField() } disabled /*value={ authorId } onChange={ handleAuthorChange }*/ />
-                <FormHelperText id="author-input-helper">Author of resulting statements.</FormHelperText>
-            </FormControl>
-
-            {/* COMMIT BUTTON */}
-
-            <br />
-            <br />
-            <FormControl fullWidth>
-                <Box display="flex" gap={2}>
-                    <Button fullWidth variant="contained" onClick={() => processDocument() }>Commit</Button>
-                </Box>
-            </FormControl>
-
-            {/* Text display of the resulting document */}
-            <br />
-            <br />
-            <Typography variant="h5">Output context associations</Typography>
-            <br />
-
-            <FormControl fullWidth>
-                <TextareaAutosize minRows={8} maxRows={20} readOnly value={processedDocument} />
-            </FormControl>
-
-            <br />
-
-            {/* Copy Button */}
-            <FormControl fullWidth>
-                <Box display="flex" gap={2}>
-                    <Button 
-                        variant="contained" 
-                        color="primary" 
-                        startIcon={<ContentCopyIcon />} 
-                        onClick={handleCopyToClipboard}
-                        disabled={enableContentInteractions()}
-                    >
-                        Copy to Clipboard
-                    </Button>
-                </Box>
-            </FormControl>
+            <Box>
+                <br />
+                <FormControl fullWidth>
+                    <Box display="flex" gap={2}>
+                        <Button fullWidth variant="contained" sx={{height: "3rem"}} onClick={() => processDocument() }>Commit context information on input</Button>
+                    </Box>
+                </FormControl>
+            </Box>
 
 
-            {/* Text input to POST/PUT the document to a URI */}
+            <Box>
+                {/* Text display of the resulting document */}
 
-            {/* Source URL */}
-            <br />
-            <Typography variant="h5">Target document</Typography>
-            <br />
+                <Typography  sx={{marginBottom: SMALLMARGIN, marginTop: MARGIN}} variant="h5" textAlign={"left"}>
+                    Defined context associations
+                </Typography>
 
-            <FormControl fullWidth>
-                <InputLabel htmlFor="target-input">Source URL</InputLabel>
-                <Input id="target-input" aria-describedby="target-input-helper" value={ targetId } onChange={ handleTargetChange } />
-                <FormHelperText id="target-input-helper">Target URI to POST/PUT the resulting context associations</FormHelperText>
-            </FormControl>
+                <Typography textAlign={"left"} sx={{marginBottom: MARGIN}} color="darkblue">
+                    The Textfield contains the created context associations on the input data.<br/>
+                    The input data is contained in a Blank Node Graph on which the context information<br/>
+                    chosen above is defined.
+                </Typography>
 
-            {/* CONFIRM BUTTON */}
-            <br />
-            <br />
+                <FormControl fullWidth>
+                    <TextareaAutosize minRows={8} maxRows={20} readOnly value={processedDocument} />
+                </FormControl>
 
-            <FormControl fullWidth>
-                <Box display="flex" gap={2}>
-                    <Button fullWidth variant="contained" onClick={handlePostResource} disabled={enableContentInteractions()}>POST</Button>
-                    <Button fullWidth variant="contained" onClick={handlePutResource} disabled={enableContentInteractions()}>PUT</Button>
-                </Box>
-            </FormControl>
+                <br />
 
-            <br />
-            <br />
+                {/* Copy Button */}
+                <FormControl fullWidth>
+                    <Box display="flex" gap={2}>
+                        <Button 
+                            variant="contained" 
+                            color="primary" 
+                            startIcon={<ContentCopyIcon />} 
+                            onClick={handleCopyToClipboard}
+                            disabled={enableContentInteractions()}
+                        >
+                            Copy to Clipboard
+                        </Button>
+                    </Box>
+                </FormControl>
+            </Box>
 
-            <FormControl fullWidth>
-                <InputLabel htmlFor="resource-location">Resource Location</InputLabel>
-                <Input id="resource-location" readOnly value={ resourceLocation } onChange={ handleSourceChange } />
-                
-            </FormControl>
+            <Box>
+                <Typography sx={{marginBottom: MARGIN, marginTop: MARGIN}} variant="h5" textAlign={"left"}>
+                    Publish output document on the Web
+                </Typography>
+
+                <Typography textAlign={"left"} sx={{marginBottom: MARGIN}} color="darkblue">
+                    Publish the output document on the Web to filter it based on its context!<br />
+                    The default location is a public hosting space on my Solid pod that can be used.
+                </Typography>
+
+                <FormControl fullWidth>
+                    <TextField 
+                        id="target-input" 
+                        value={ targetId } 
+                        onChange={ handleTargetChange } 
+                        label={"Output URL"}
+                        helperText={"Target URI to POST/PUT the resulting document"}
+                    />
+                </FormControl>
+
+                {/* CONFIRM BUTTON */}
+                <br />
+                <br />
+
+                <FormControl fullWidth>
+                    <Box display="flex" gap={2}>
+                        <Button fullWidth variant="contained" onClick={handlePostResource} disabled={enableContentInteractions()}>POST</Button>
+                        <Button fullWidth variant="contained" onClick={handlePutResource} disabled={enableContentInteractions()}>PUT</Button>
+                    </Box>
+                </FormControl>
+
+                <Typography textAlign={"left"} sx={{marginTop: MARGIN, marginBottom: MARGIN}} color="darkblue">
+                    This shows the location to which the resource was published according to its "Location" header.
+                </Typography>
+
+
+                <FormControl fullWidth>
+                    <TextField 
+                        id="resource-location"  
+                        value={ resourceLocation }  
+                        aria-readonly
+                        label={"Published Resource Location"}
+                    />
+                </FormControl>
+            </Box>
                 
         </Box>
     )
