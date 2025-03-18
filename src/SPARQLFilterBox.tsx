@@ -4,9 +4,19 @@ import { evaluateQuerySync } from "./util/query";
 import { Quad } from "rdf-js";
 import { serializeTrigFromStore } from "./util/trigUtils";
 import { Store } from "n3";
+import { DPV } from "./util/util";
+import { SignatureParams } from "./ProcessingInterface";
 
-const SPARQLFilterBox = (props: { sources: string[] }) =>  {
-    const { sources } = props
+
+export type FitlerInput = {
+    sources: string[],
+    signingAuthor?: SignatureParams,
+    origin?: string,
+    purpose?: string,
+}
+
+const SPARQLFilterBox = (props: { input: FitlerInput }) =>  {
+    const { sources, signingAuthor, origin, purpose: inputPurpose } = props.input
 
     const [query, setQuery] = useState<string>('')
     const [triples, setTriples] = useState<Quad[]>([])
@@ -32,10 +42,48 @@ const SPARQLFilterBox = (props: { sources: string[] }) =>  {
     }
 
     const filterSources = () => {
-        const purpose: string | undefined = ""
-        const author: string | undefined = ""
+        const purpose: string | undefined = inputPurpose || undefined
+        const author: string | undefined = (signingAuthor && signingAuthor.webId) || undefined
+        const signature: boolean = !!signingAuthor;
 
-        let query = 
+//         let query = 
+// `PREFIX ca: <https://w3id.org/context-associations#>
+// PREFIX pol: <https://example.org/policy#>
+// PREFIX sign: <https://example.org/signature#>
+// PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+// PREFIX odrl: <http://www.w3.org/ns/odrl/2/>
+// PREFIX oac: <https://w3id.org/oac#>
+// PREFIX dpv: <http://www.w3i3.org/dpv#>
+
+// CONSTRUCT { 
+//   ?s ?p ?o . 
+// } WHERE {
+//   	GRAPH ?metadata {`;
+// if(purpose) query +=
+// `  		?policy a oWrl:Agreement;
+//     		odrl:permission ?perm.
+//     	?perm odrl:target ?dataGraph;
+//     		odrl:action odrl:use;`;
+// if(purpose && author) query +=
+// `      		odrl:assigner <${author}>;`;
+// if(purpose) query +=
+// `          	odrl:constraint ?constraint.
+//     	?constraint a odrl:Constraint;
+//             odrl:leftOperand oac:Purpose;
+//             odrl:operator odrl:eq;
+//             odrl:rightOperand <${purpose}>.`;
+// if(signature) query +=    
+// `    	?signature a sign:DataIntegrityProof;`
+// if(signature && author) query +=
+// `			sign:issuer  <${author}>;`;
+// if(signature) query +=    
+// `  			sign:target ?dataGraph.`;
+// query +=             
+// `  	}
+//     GRAPH ?dataGraph { ?s ?p ?o . }
+// }`
+
+let query = 
 `PREFIX ca: <https://w3id.org/context-associations#>
 PREFIX pol: <https://example.org/policy#>
 PREFIX sign: <https://example.org/signature#>
@@ -48,22 +96,22 @@ CONSTRUCT {
   ?s ?p ?o . 
 } WHERE {
   	GRAPH ?metadata {
-  		?policy a odrl:Agreement;
+        ${(purpose && `?policy a odrl:Agreement;
     		odrl:permission ?perm.
     	?perm odrl:target ?dataGraph;
     		odrl:action odrl:use;
-      		odrl:assigner <https://publicpod.rubendedecker.be/josd/profile/card#me>;
+            ${(author && `odrl:assigner  <${author}>;`)||""}
           	odrl:constraint ?constraint.
     	?constraint a odrl:Constraint;
-                 odrl:leftOperand oac:Purpose;
-                 odrl:operator odrl:eq;
-                 odrl:rightOperand <https://w3id.org/dpv#ServiceProvision>.
-    
-    
-    	?signature a sign:DataIntegrityProof;
-			sign:issuer  <https://publicpod.rubendedecker.be/josd/profile/card#me>;
-   			sign:target ?dataGraph.
-  	}
+            odrl:leftOperand oac:Purpose;
+            odrl:operator odrl:eq;
+            odrl:rightOperand <${purpose}>.`
+        )||""}
+        ${(signature && `?signature a sign:DataIntegrityProof;
+            ${(author && `sign:issuer  <${author}>;`)||""}
+            sign:target ?dataGraph.`            
+        )||""}
+    }
     GRAPH ?dataGraph { ?s ?p ?o . }
 }`
 

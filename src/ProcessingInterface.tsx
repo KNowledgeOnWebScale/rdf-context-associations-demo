@@ -1,11 +1,12 @@
 import { Box, Button, FormControl, FormHelperText, Input, InputLabel, MenuItem, OutlinedInput, Select, SelectChangeEvent, TextareaAutosize, TextField, Typography } from "@mui/material"
 import { ChangeEvent, useState } from "react"
 import { DPV } from "./util/util"
-import SPARQLFilterBox from "./SPARQLFilterBox"
+import SPARQLFilterBox, { FitlerInput } from "./SPARQLFilterBox"
+
 
 type FieldInput = { index: number, value: string }
 
-type SignatureParams = { webId: string, privateKey: string, publicKey: string }
+export type SignatureParams = { webId: string, privateKey: string, publicKey: string }
 const signatureFilters: Map<string, SignatureParams | undefined > = new Map([
     ["None", undefined],
     ["Ruben", { 
@@ -20,11 +21,12 @@ const signatureFilters: Map<string, SignatureParams | undefined > = new Map([
     }]
 ])
 
-const purposeFilters: Map<string, string> = new Map([
+const purposeFilters: Map<string, string | undefined> = new Map([
+    ["None", undefined],
     ["ServiceProvision", DPV.ServiceProvision],
-    ["ServiceProvision", DPV.Marketing],
-    ["ServiceProvision", DPV.Personalisation],
-    ["ServiceProvision", DPV.PublicBenefit],
+    ["Marketing", DPV.Marketing],
+    ["Personalization", DPV.Personalisation],
+    ["PublicBenefit", DPV.PublicBenefit],
 ])
 
 const ProcessingInterface = () => {
@@ -55,8 +57,15 @@ const ProcessingInterface = () => {
     const handlePurposeChange = (event: SelectChangeEvent) => { setPurposeId(event.target.value) };
 
     
-    const [originId, setOriginId] = useState("");
-    const handleOriginChange = (event: ChangeEvent<HTMLInputElement>) => { setOriginId(event.target.value) };
+    const [origin, setOrigin] = useState("");
+    const handleOriginChange = (event: ChangeEvent<HTMLInputElement>) => { setOrigin(event.target.value) };
+
+    const filterInput: FitlerInput = { 
+        sources: inputs.map(fieldInput => fieldInput.value),
+        purpose: purposeFilters.get(purposeId),
+        signingAuthor: signatureFilters.get(signatureId),
+        origin: origin
+    }
 
     return ( 
         <Box>
@@ -135,14 +144,14 @@ const ProcessingInterface = () => {
             {/* auto-greyed-out origin provenance */}
             <FormControl fullWidth>
                 <InputLabel htmlFor="origin-input" style={{"backgroundColor": "white"}}>Origin</InputLabel>
-                <OutlinedInput id="origin-input" aria-describedby="origin-input-helper" value={ originId } onChange={ handleOriginChange } />
+                <OutlinedInput id="origin-input" aria-describedby="origin-input-helper" value={ origin } onChange={ handleOriginChange } />
                 <FormHelperText id="origin-input-helper">Origin of resulting statements.</FormHelperText>
             </FormControl>
 
             <br />
             <br />
             {/* TODO Show output quads */}
-            <SPARQLFilterBox sources={inputs.map(fieldInput => fieldInput.value)}/>
+            <SPARQLFilterBox input={filterInput}/>
 
             {/* Show HOW LONG their purpose is still valid */}
 
