@@ -1,6 +1,7 @@
-import { Box, Button, FormControl, FormHelperText, Input, InputLabel, MenuItem, Select, SelectChangeEvent, Typography } from "@mui/material"
+import { Box, Button, FormControl, FormHelperText, Input, InputLabel, MenuItem, OutlinedInput, Select, SelectChangeEvent, TextareaAutosize, TextField, Typography } from "@mui/material"
 import { ChangeEvent, useState } from "react"
 import { DPV } from "./util/util"
+import SPARQLFilterBox from "./SPARQLFilterBox"
 
 type FieldInput = { index: number, value: string }
 
@@ -57,13 +58,6 @@ const ProcessingInterface = () => {
     const [originId, setOriginId] = useState("");
     const handleOriginChange = (event: ChangeEvent<HTMLInputElement>) => { setOriginId(event.target.value) };
 
-    
-    console.log(inputs)
-
-    const filterSources = () => {
-
-    }
-
     return ( 
         <Box>
             <Typography variant="h2">Processing Interface</Typography>
@@ -98,7 +92,7 @@ const ProcessingInterface = () => {
 
             {/* Sining identity selection */}
             <FormControl fullWidth>
-                <InputLabel id="signature-id-label">Signing Author</InputLabel>
+                <InputLabel id="signature-id-label">Author</InputLabel>
                 <Select
                     labelId="signature-id-label"
                     id="signature-id-select"
@@ -119,7 +113,7 @@ const ProcessingInterface = () => {
 
             {/* Sining identity selection */}
             <FormControl fullWidth>
-                <InputLabel id="purpose-id-label">Usage Purpose</InputLabel>
+                <InputLabel id="purpose-id-label">Purpose</InputLabel>
                 <Select
                     labelId="purpose-id-label"
                     id="purpose-id-select"
@@ -140,22 +134,15 @@ const ProcessingInterface = () => {
 
             {/* auto-greyed-out origin provenance */}
             <FormControl fullWidth>
-                <Input id="origin-input" aria-describedby="origin-input-helper" value={ originId } onChange={ handleOriginChange } />
+                <InputLabel htmlFor="origin-input" style={{"backgroundColor": "white"}}>Origin</InputLabel>
+                <OutlinedInput id="origin-input" aria-describedby="origin-input-helper" value={ originId } onChange={ handleOriginChange } />
                 <FormHelperText id="origin-input-helper">Origin of resulting statements.</FormHelperText>
             </FormControl>
 
             <br />
             <br />
-
-            <FormControl fullWidth>
-                <Box display="flex" gap={2}>
-                    <Button fullWidth variant="contained" onClick={() => filterSources()}>Filter sources</Button>
-                </Box>
-            </FormControl>
-
-            {/* TODO Show SPARQL query used to filter sources */}
-
             {/* TODO Show output quads */}
+            <SPARQLFilterBox sources={inputs.map(fieldInput => fieldInput.value)}/>
 
             {/* Show HOW LONG their purpose is still valid */}
 

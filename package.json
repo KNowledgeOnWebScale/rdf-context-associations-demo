@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@comunica/query-sparql": "^4.1.0",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
     "@esbuild-plugins/node-globals-polyfill": "^0.2.3",
