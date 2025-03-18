@@ -1,11 +1,14 @@
 import { ChangeEvent, useState } from "react";
-import { Box, Button, Checkbox, FormControlLabel, FormGroup, FormHelperText, Input, InputLabel, MenuItem, Select, SelectChangeEvent, TextareaAutosize, Typography } from "@mui/material"
+import { Box, Button, Checkbox, FormControlLabel, FormGroup, FormHelperText, Input, InputLabel, MenuItem, Select, SelectChangeEvent, TextareaAutosize, TextField, Typography } from "@mui/material"
 import FormControl from '@mui/material/FormControl';
 import { Builder } from "./util/caBuilder";
 import { serializeTrigFromStore } from "./util/trigUtils";
 import { DPV, postResource, putResource } from "./util/util";
 import { importPrivateKey } from "./util/signature/sign";
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+
+const MARGIN = "1.4em";
+const SMALLMARGIN = "0.7em";
 
 type SignatureParams = { webId: string, privateKey: string, publicKey: string }
 const signatureOptions: Map<string, SignatureParams | undefined > = new Map([
@@ -140,70 +143,111 @@ const ContextInterface = () => {
 
     return ( 
         <Box>
-            <Typography variant="h2">Contextualization Interface</Typography>
+            <Typography variant="h2">Defining Context Information</Typography>
 
             {/* Source URL */}
-            <br />
-            <Typography variant="h5">Input document</Typography>
-            <br />
 
-            <FormControl fullWidth>
-                <InputLabel htmlFor="source-input">Source URL</InputLabel>
-                <Input id="source-input" aria-describedby="source-input-helper" value={ sourceId } onChange={ handleSourceChange } />
-                <FormHelperText id="source-input-helper">URI of the Linked Data Document.</FormHelperText>
-                <FormGroup>
-                    <FormControlLabel control={<Checkbox checked={originCheckbox} onChange={ handleGraphOriginChange }/>} label="Interpret Graph Names as Origin" />
-            </FormGroup>
-            </FormControl>
+            <Box>
+                <Typography  sx={{marginBottom: SMALLMARGIN, marginTop: MARGIN}} variant="h5" textAlign={"left"}>
+                    Providing an input document
+                </Typography>
+
+                <Typography textAlign={"left"} sx={{marginBottom: MARGIN}} color="darkblue">
+                    First, an input document must be provided to contextualize.<br />
+                    A placeholder document is provided with my live WebID RDF document,<br />
+                    but any RDF document should do, including Trig, Turtle, JSON-LD, nquads, ntriples.
+                </Typography>
+
+                <FormControl fullWidth>
+                    <TextField 
+                        id="source-input" 
+                        aria-describedby="source-input-helper" 
+                        label={"Source URL"}
+                        value={ sourceId } 
+                        onChange={ handleSourceChange } 
+                        helperText={"URI of the Linked Data Document"}
+                    />
+                    <FormGroup>
+                        <Typography textAlign={"left"} sx={{marginTop: MARGIN}} color="darkblue">
+                            If the source document contains quads, these must be converted to blank node graphs. <br />
+                            Checking this checkbox retains the original graph name as the origin of the new graph <br />
+                            in the defined provenance information.
+                        </Typography>
+                        <FormControlLabel control={<Checkbox checked={originCheckbox} onChange={ handleGraphOriginChange }/>} label="Interpret Graph Names as Origin" />
+                    </FormGroup>
+                </FormControl>
+            </Box>
                 
-            <br />
-            <Typography variant="h5">Signature context information</Typography>
-            <br />
+            <Box>
+                <Typography  sx={{marginBottom: SMALLMARGIN, marginTop: MARGIN}} variant="h5" textAlign={"left"}>
+                    Defining a signing author
+                </Typography>
 
-            {/* Sining identity selection */}
-            <FormControl fullWidth>
-                <InputLabel id="signature-id-label">Signing Author</InputLabel>
-                <Select
-                    labelId="signature-id-label"
-                    id="signature-id-select"
-                    value={signatureId}
-                    label="Signature"
-                    onChange={ handleSignatureChange }
-                    aria-describedby="select-signature-helper"
-                >
-                    { Array.from(signatureOptions.entries()).map(([id, _entry]) => 
-                        <MenuItem value={id}>{ id }</MenuItem>    
-                    )}
-                </Select>
-                <FormHelperText id="select-signature-helper">Author signing off on the created context information</FormHelperText>
-            </FormControl>
+                <Typography textAlign={"left"} sx={{marginBottom: MARGIN}} color="darkblue">
+                    Here, a selection of Web Identifiers is provided, that can be used to define <br />
+                    the signing author of the resulting context information. Using their keys, <br />
+                    both the input data and the context graph will be signed.
+                </Typography>
 
-            <br />
-            <Typography variant="h5">Policy context information</Typography>
-            <br />
-            
-            {/* Policy selection */}
-            <FormControl fullWidth>
-                <InputLabel id="policy-id-label">Policy</InputLabel>
-                <Select
-                    labelId="policy-id-label"
-                    id="policy-id-select"
-                    value={policyId}
-                    label="Policy"
-                    onChange={ handlePolicyChange }
-                    aria-describedby="select-policy-helper"
-                >
-                    { Array.from(policyOptions.entries()).map(([id, entry]) => 
-                        <MenuItem value={id}>{ entry?.explanation || id }</MenuItem>    
-                    )}
-                </Select>
-                <FormHelperText id="select-policy-helper">Policy to define over target content.</FormHelperText>
-            </FormControl>
+                <FormControl fullWidth>
+                    <InputLabel id="signature-id-label" sx={{backgroundColor: "white"}}>Signing Author</InputLabel>
+                    <Select
+                        labelId="signature-id-label"
+                        id="signature-id-select"
+                        value={signatureId}
+                        label="Signature"
+                        onChange={ handleSignatureChange }
+                        aria-describedby="select-signature-helper"
+                    >
+                        { Array.from(signatureOptions.entries()).map(([id, _entry]) => 
+                            <MenuItem value={id}>{ id }</MenuItem>    
+                        )}
+                    </Select>
+                    <FormHelperText id="select-signature-helper">Author signing off on the created context associations</FormHelperText>
+                </FormControl>
+            </Box>
+
+            <Box>
+                <Typography  sx={{marginBottom: SMALLMARGIN, marginTop: MARGIN}} variant="h5" textAlign={"left"}>
+                    Defining a usage agreement
+                </Typography>
+                
+                <Typography textAlign={"left"} sx={{marginBottom: MARGIN}} color="darkblue">
+                    Exchanging personal data, we need to define the purpose for which the data can be used.<br />
+                    The below selection defines policies that impose a time constraint, a set of purposes<br />
+                    for which the associated data can be used, and when chosen sets the above signing author<br />
+                    as the policy issuer.
+                </Typography>
+
+                <FormControl fullWidth>
+                    <InputLabel id="policy-id-label">Policy</InputLabel>
+                    <Select
+                        labelId="policy-id-label"
+                        id="policy-id-select"
+                        value={policyId}
+                        label="Policy"
+                        onChange={ handlePolicyChange }
+                        aria-describedby="select-policy-helper"
+                    >
+                        { Array.from(policyOptions.entries()).map(([id, entry]) => 
+                            <MenuItem value={id}>{ entry?.explanation || id }</MenuItem>    
+                        )}
+                    </Select>
+                    <FormHelperText id="select-policy-helper">Policy to define over target content.</FormHelperText>
+                </FormControl>
+            </Box>
 
             {/* Provenance provision */}
-            <br />
-            <Typography variant="h5">Provenance context information</Typography>
-            <br />
+            <Box>
+                <Typography sx={{marginBottom: MARGIN, marginTop: MARGIN}} variant="h5" textAlign={"left"}>
+                    Provenance context information
+                </Typography>
+
+                <Typography textAlign={"left"} sx={{marginBottom: MARGIN}} color="darkblue">
+                    The provenance information defined on the data is derived from <br />
+                    the datasource provided above and the chosen signing author.
+                </Typography>
+            </Box>
 
             {/* auto-greyed-out origin provenance */}
             <FormControl fullWidth>
