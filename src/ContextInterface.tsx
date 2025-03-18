@@ -1,5 +1,5 @@
 import { ChangeEvent, useState } from "react";
-import { Box, Button, Checkbox, FormControlLabel, FormGroup, FormHelperText, InputLabel, MenuItem, Select, SelectChangeEvent, TextareaAutosize, TextField, Typography } from "@mui/material"
+import { Box, Button, Checkbox, FormControlLabel, FormGroup, FormHelperText, InputLabel, List, ListItem, ListItemButton, ListItemText, MenuItem, Select, SelectChangeEvent, TextareaAutosize, TextField, Typography } from "@mui/material"
 import FormControl from '@mui/material/FormControl';
 import { Builder } from "./util/caBuilder";
 import { serializeTrigFromStore } from "./util/trigUtils";
@@ -36,22 +36,46 @@ const policyOptions: Map<string, any> = new Map([
         policy: {duration: "P1M", purpose: [DPV.ServiceProvision, DPV.Marketing, DPV.Personalisation] as string[]}
     }],
 ])
+
+const purposeOptions: Map<string, string | undefined > = new Map([
+    ["None", undefined],
+    ["Personalisation", DPV.Personalisation],
+    ["ServiceProvision", DPV.ServiceProvision],
+    ["Marketing", DPV.Marketing],
+    ["PublicBenefit", DPV.PublicBenefit],
+])
+
+const durationOptions: Map<string, string | undefined> = new Map([
+    ["None", undefined],
+    ["1 Day", "P1D"],
+    ["1 Week", "P7D"],
+    ["1 Month", "P1M"]
+])
  
 const ContextInterface = () => {
 
     const [sourceId, setSourceId] = useState("https://pod.rubendedecker.be/profile/card#me")
-    const handleSourceChange = (event: ChangeEvent<HTMLInputElement>) => { setSourceId(event.target.value) };
+    const handleSourceChange = (event: ChangeEvent<HTMLInputElement>) => { 
+        setSourceId(event.target.value) 
+    };
+
+    const [durationId, setDurationId] = useState("None")
+    const handleDurationChange = (event: SelectChangeEvent) => { 
+        setDurationId(event.target.value) 
+    };
 
     const [originCheckbox, setOriginCheckBox] = useState(true)
-    const handleGraphOriginChange = (event: ChangeEvent<HTMLInputElement>) => { setOriginCheckBox(event.target.checked) };
+    const handleGraphOriginChange = (event: ChangeEvent<HTMLInputElement>) => { 
+        setOriginCheckBox(event.target.checked) 
+    };
 
     const [signatureId, setSignatureId] = useState("None");
     const handleSignatureChange = (event: SelectChangeEvent) => { 
         setSignatureId(event.target.value) 
     };
     
-    const [policyId, setPolicyId] = useState("None");
-    const handlePolicyChange = (event: SelectChangeEvent) => { setPolicyId(event.target.value) };
+    const [purposeId, setPurposeId] = useState("None");
+    const handlePurposeChange = (event: SelectChangeEvent) => { setPurposeId(event.target.value) };
 
     // const [authorId, setAuthorId] = useState("https://pod.rubendedecker.be/profile/card#me")
     // const handleAuthorChange = (event: ChangeEvent<HTMLInputElement>) => { setAuthorId(event.target.value) };
@@ -72,41 +96,54 @@ const ContextInterface = () => {
 
     const [processedDocument, setProcessedDocument] = useState("")
     const processDocument = async function() {
+        
+        if(!sourceId) return;
 
-        let selectedSignatureIdentity;
-        if (signatureId !== "None") selectedSignatureIdentity = signatureOptions.get(signatureId)
+        const durationChoice = durationOptions.get(durationId)
+        const purposeChoice = purposeOptions.get(purposeId)
+        const signatureChoice = signatureOptions.get(signatureId)
 
-        let selectedPolicy;
-        if (policyId !== "None") {
-            selectedPolicy = policyOptions.get(policyId).policy
-            if(selectedSignatureIdentity) selectedPolicy = { ...selectedPolicy, ...{ assigner: selectedSignatureIdentity.webId }}
+        let definePolicy = false;    
+        let selectedPolicy: any = {};
+        if (durationChoice) {
+            definePolicy = true;
+            selectedPolicy.duration = durationChoice
+        } 
+        if (purposeChoice) {
+            definePolicy = true;
+            selectedPolicy.purpose = [ purposeChoice ]
+        } 
+        if (signatureChoice) {
+            selectedPolicy.author = signatureChoice?.webId
         }
 
         let author;
         let selectedSignature;
         
-        if(selectedSignatureIdentity) {
+        console.log(durationId, purposeId, signatureId, definePolicy)
+
+        if(signatureChoice) {
         
-            const privateKeyResource = selectedSignatureIdentity.privateKey
+            const privateKeyResource = signatureChoice.privateKey
             const privateKeyJSON = await (await fetch(privateKeyResource)).json()
             const privateKey = await importPrivateKey(privateKeyJSON as JsonWebKey)
             
             selectedSignature = {
                 privateKey: privateKey, 
-                issuer: selectedSignatureIdentity.webId, 
-                verificationMethod: selectedSignatureIdentity.publicKey,
+                issuer: signatureChoice.webId, 
+                verificationMethod: signatureChoice.publicKey,
             }
-            author = selectedSignatureIdentity.webId
+            author = signatureChoice.webId
         }
 
-        let builder = selectedSignatureIdentity ? new Builder(selectedSignature) : new Builder();
+        let builder = signatureChoice ? new Builder(selectedSignature) : new Builder();
         builder = await builder
             .startSession()
             .loadRDF(sourceId, originCheckbox)
             .provenance({origin: sourceId, author})
         
         // Handle policy entry
-        if (selectedPolicy) builder = await builder.policy( selectedPolicy )
+        if (definePolicy) builder = await builder.policy( selectedPolicy )
 
         // Handle signature entry
         if (selectedSignature) {
@@ -219,21 +256,44 @@ const ContextInterface = () => {
                     as the policy issuer.
                 </Typography>
 
-                <FormControl fullWidth>
-                    <InputLabel id="policy-id-label">Policy</InputLabel>
+                <FormControl fullWidth >
+                    <InputLabel id="policy-duration-label" sx={{backgroundColor: "white"}}>Usage duration</InputLabel>
                     <Select
-                        labelId="policy-id-label"
-                        id="policy-id-select"
-                        value={policyId}
+                        labelId="policy-duration-label"
+                        id="policy-duration-select"
+                        value={durationId}
                         label="Policy"
-                        onChange={ handlePolicyChange }
-                        aria-describedby="select-policy-helper"
+                        onChange={ handleDurationChange }
+                        aria-describedby="duration-policy-helper"
                     >
-                        { Array.from(policyOptions.entries()).map(([id, entry]) => 
-                            <MenuItem value={id}>{ entry?.explanation || id }</MenuItem>    
+                        { Array.from(durationOptions.entries()).map(([id, _entry]) => 
+                            <MenuItem value={id}>{ id }</MenuItem>    
                         )}
                     </Select>
-                    <FormHelperText id="select-policy-helper">Policy to define over target content.</FormHelperText>
+                    <FormHelperText id="duration-policy-helper">Duration for which content can be used</FormHelperText>
+                </FormControl>
+
+                <Typography textAlign={"left"} sx={{marginBottom: MARGIN, marginTop: MARGIN}} color="darkblue">
+                    The policy purpose defines the allowed purposes for which data can be processed
+                </Typography>
+
+
+                <FormControl fullWidth> 
+                    <InputLabel id="policy-id-label" sx={{backgroundColor: "white"}}>Usage purpose</InputLabel>
+                    <Select
+                        fullWidth
+                        labelId="policy-id-label"
+                        id="policy-id-select"
+                        value={purposeId}
+                        label="Policy"
+                        onChange={ handlePurposeChange }
+                        aria-describedby="select-policy-helper"
+                    >
+                        { Array.from(purposeOptions.entries()).map(([id, entry]) => 
+                            <MenuItem value={id}>{ id }</MenuItem>    
+                        )}
+                    </Select>
+                    <FormHelperText id="select-policy-helper">Usage purpose of resulting data</FormHelperText>
                 </FormControl>
             </Box>
 

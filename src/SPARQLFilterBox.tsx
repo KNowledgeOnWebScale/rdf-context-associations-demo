@@ -31,14 +31,12 @@ const SPARQLFilterBox = (props: { input: FitlerInput }) =>  {
         
         const usedSources = sources.filter(s => !!s)
         const quads = await evaluateQuerySync(usedSources, query)
-        console.log('quads', usedSources, quads)
-        if (!quads || !quads.length) return "";
         const store = new Store()
         store.addQuads(quads)
         const outputTrig = await serializeTrigFromStore(store)
         console.log("output", outputTrig, quads)
         // setTriples(quads)
-        setSerialized(outputTrig)
+        setSerialized(outputTrig || "No output for provided filter options!")
     }
 
     const filterSources = () => {
@@ -125,7 +123,7 @@ CONSTRUCT {
             <br />
             <FormControl fullWidth>
                 <Box display="flex" gap={2}>
-                    <Button fullWidth variant="contained" onClick={() => filterSources()}>Evaluate using SPARQL</Button>
+                    <Button variant="contained" onClick={() => filterSources()}>Evaluate using SPARQL</Button>
                 </Box>
                 <br />
             </FormControl>

@@ -99,7 +99,7 @@ const ProcessingInterface = () => {
 
                 <FormControl fullWidth>
                     <Box display="flex" gap={2}>
-                        <Button fullWidth variant="contained" onClick={addInput}>Add input source field</Button>
+                        <Button variant="contained" onClick={addInput}>Add input source field</Button>
                     </Box>
                 </FormControl>
             </Box>

@@ -133,7 +133,6 @@ export class Builder {
 
     policy(options: {duration?: string, purpose?: string[], assigner?: string, assignee?: string}): Builder {
         let {duration, purpose, assigner, assignee} = options
-        if (!duration) duration = "P7D"
         if (!this.session) { log({ level: "info", message: 'no session found, nothing to set policy over!'}); return this; }
 
         const createPolicy = async (store: FocusRDFStore): Promise<FocusRDFStore> => {
