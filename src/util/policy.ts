@@ -52,18 +52,18 @@ export function createSimplePolicy(
     
     // Add purpose constraint
     if (purpose && purpose.length) {
-        const constraintSubject = blankNode()
-        if (purpose.length === 1) {
-            policyGraph = policyGraph.concat([
-                triple(constraintSubject, namedNode(RDF.type), namedNode(ODRL.Constraint)),
-                triple(constraintSubject, namedNode(ODRL.leftOperand), namedNode("https://w3id.org/oac#Purpose")),
-                triple(constraintSubject, namedNode(ODRL.operator), namedNode(ODRL.eq)),
-                triple(constraintSubject, namedNode(ODRL.rightOperand), namedNode(purpose[0]))
-            ])
+        // const constraintSubject = blankNode()
+        // const purposeConstraints: BlankNode[] = []
+        // if (purpose.length === 1) {
+        //     policyGraph = policyGraph.concat([
+        //         triple(constraintSubject, namedNode(RDF.type), namedNode(ODRL.Constraint)),
+        //         triple(constraintSubject, namedNode(ODRL.leftOperand), namedNode("https://w3id.org/oac#Purpose")),
+        //         triple(constraintSubject, namedNode(ODRL.operator), namedNode(ODRL.eq)),
+        //         triple(constraintSubject, namedNode(ODRL.rightOperand), namedNode(purpose[0]))
+        //     ])
+        //     purposeConstraints.push(constraintSubject)
 
-        } else {
-
-            const purposeConstraints: BlankNode[] = []
+        // } else {
 
             // create list of constraints
             for (let specificPurpose of purpose) {
@@ -74,18 +74,22 @@ export function createSimplePolicy(
                     triple(purposeConstraintSubj, namedNode(ODRL.operator), namedNode(ODRL.eq)),
                     triple(purposeConstraintSubj, namedNode(ODRL.rightOperand), namedNode(specificPurpose))
                 ])
-                purposeConstraints.push(purposeConstraintSubj)
+                // purposeConstraints.push(purposeConstraintSubj)
+                constraints.push(purposeConstraintSubj)
             } 
-            // create list of purpose constraints
-            const purposeConstraintsList = createRDFList(purposeConstraints);
-            if (!purposeConstraintsList.subject) throw new Error('Cannot create empty list of purposes.')
-            // add list to graph
-            policyGraph = policyGraph.concat(purposeConstraintsList.quads)
+            // Prevent list usage because of SPARQL processing difficulties
+            // // create list of purpose constraints
+            // const purposeConstraintsList = createRDFList(purposeConstraints);
+            // if (!purposeConstraintsList.subject) throw new Error('Cannot create empty list of purposes.')
+            // // add list to graph
+            // policyGraph = policyGraph.concat(purposeConstraintsList.quads)
             // define list as OR
-            policyGraph.push(triple(constraintSubject, namedNode(ODRL.or), purposeConstraintsList.subject))
+            // policyGraph.push(triple(constraintSubject, namedNode(ODRL.or), purposeConstraintsList.subject))
 
-        }
-        constraints.push(constraintSubject)
+            // policyGraph = policyGraph.concat(purposeConstraintsList.quads)
+
+        // }
+        // constraints.push(constraintSubject)
     }
     
     // Create Permission
@@ -98,24 +102,32 @@ export function createSimplePolicy(
     policyGraph.push(triple(permissionSubject, namedNode(ODRL.action), namedNode(ODRL.read)))
     if (assigner) policyGraph.push(triple(permissionSubject, namedNode(ODRL.assigner), namedNode(assigner)))
     if (assignee) policyGraph.push(triple(permissionSubject, namedNode(ODRL.assignee), namedNode(assignee)))
-        
+    
+    // Remove list for ease of processing
+    
+    // // append constraints to permission
+    // if (constraints.length) {
+    //     if (constraints.length > 1) {
+    //         const constraintAndSubject = blankNode()
+    //         const constraintList = createRDFList(constraints);
+    //         if (!constraintList.subject) throw new Error('Cannot create empty list of purposes.')
+    //         // add list to graph
+    //         policyGraph = policyGraph.concat(constraintList.quads)
+    //         // define list as OR
+    //         policyGraph.push(triple(constraintAndSubject, namedNode(ODRL.and), constraintList.subject))
+    //         policyGraph.push(triple(permissionSubject, namedNode(ODRL.constraint), constraintAndSubject))
+
+    //     } else {
+    //         policyGraph.push(triple(permissionSubject, namedNode(ODRL.constraint), constraints[0]))
+    //     }
+    // }
+
+
     // append constraints to permission
-    if (constraints.length) {
-        if (constraints.length > 1) {
-            const constraintAndSubject = blankNode()
-            const constraintList = createRDFList(constraints);
-            if (!constraintList.subject) throw new Error('Cannot create empty list of purposes.')
-            // add list to graph
-            policyGraph = policyGraph.concat(constraintList.quads)
-            // define list as OR
-            policyGraph.push(triple(constraintAndSubject, namedNode(ODRL.and), constraintList.subject))
-            policyGraph.push(triple(permissionSubject, namedNode(ODRL.constraint), constraintAndSubject))
-
-        } else {
-            policyGraph.push(triple(permissionSubject, namedNode(ODRL.constraint), constraints[0]))
-        }
+    for (let constraint of constraints) {
+        policyGraph.push(triple(permissionSubject, namedNode(ODRL.constraint), constraint))
     }
-
+    
     // Create Agreement
     const agreementSubject = blankNode()
     policyGraph.push(triple(agreementSubject, namedNode(RDF.type), namedNode(ODRL.Agreement)))

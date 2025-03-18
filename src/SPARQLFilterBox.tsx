@@ -36,37 +36,37 @@ const SPARQLFilterBox = (props: { sources: string[] }) =>  {
         const author: string | undefined = ""
 
         let query = 
-`PREFIX po: <http://purl.org/ontology/po/>
-PREFIX ca: <https://w3id.org/context-associations#>
-PREFIX prov: <https://example.org/provenance#>
+`PREFIX ca: <https://w3id.org/context-associations#>
 PREFIX pol: <https://example.org/policy#>
+PREFIX sign: <https://example.org/signature#>
 PREFIX foaf: <http://xmlns.com/foaf/0.1/>
-CONSTRUCT { ?s ?p ?o . } WHERE {
-    GRAPH ?metadataGraph { 
-        ?dataGraph a ca:GraphIdentifier;
-        prov:origin <http://dataspace.org/ruben/resource1>.
-`;
-if (purpose)
-query +=`
-        ?policy a pol:Policy;
-            pol:target ?targetDataGraph;
-`
-if (purpose && author)
-query +=`
-            pol:issuer <${author}>;
-`
-if (purpose)
-    query +=`
-        pol:permission ?perm.
-    ?perm pol:action pol:Use. 
-    ?perm pol:purpose ${purpose}. 
-`
-query +=`
-    }
+PREFIX odrl: <http://www.w3.org/ns/odrl/2/>
+PREFIX oac: <https://w3id.org/oac#>
+PREFIX dpv: <http://www.w3i3.org/dpv#>
+
+CONSTRUCT { 
+  ?s ?p ?o . 
+} WHERE {
+  	GRAPH ?metadata {
+  		?policy a odrl:Agreement;
+    		odrl:permission ?perm.
+    	?perm odrl:target ?dataGraph;
+    		odrl:action odrl:use;
+      		odrl:assigner <https://publicpod.rubendedecker.be/josd/profile/card#me>;
+          	odrl:constraint ?constraint.
+    	?constraint a odrl:Constraint;
+                 odrl:leftOperand oac:Purpose;
+                 odrl:operator odrl:eq;
+                 odrl:rightOperand <https://w3id.org/dpv#ServiceProvision>.
+    
+    
+    	?signature a sign:DataIntegrityProof;
+			sign:issuer  <https://publicpod.rubendedecker.be/josd/profile/card#me>;
+   			sign:target ?dataGraph.
+  	}
     GRAPH ?dataGraph { ?s ?p ?o . }
 }`
 
-        console.log('filtering')
         executeQuery(query, sources)
         setQuery(query)
     }
@@ -105,3 +105,45 @@ query +=`
 }
 
 export default SPARQLFilterBox
+
+
+
+
+
+// Example SPARQL Query
+/**
+PREFIX po: <http://purl.org/ontology/po/>
+PREFIX ca: <https://w3id.org/context-associations#>
+PREFIX prov: <https://example.org/provenance#>
+PREFIX pol: <https://example.org/policy#>
+PREFIX sign: <https://example.org/signature#>
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+PREFIX odrl: <http://www.w3.org/ns/odrl/2/>
+PREFIX oac: <https://w3id.org/oac#>
+PREFIX dpv: <http://www.w3i3.org/dpv#>
+
+CONSTRUCT { 
+  ?s ?p ?o . 
+} WHERE {
+  
+  	GRAPH ?metadata {
+  		?policy a odrl:Agreement;
+    		odrl:permission ?perm.
+    	?perm odrl:target ?dataGraph;
+    		odrl:action odrl:use;
+      		odrl:assigner <https://publicpod.rubendedecker.be/josd/profile/card#me>;
+          	odrl:constraint ?constraint.
+    	?constraint a odrl:Constraint;
+                 odrl:leftOperand oac:Purpose;
+                 odrl:operator odrl:eq;
+                 odrl:rightOperand <https://w3id.org/dpv#ServiceProvision>.
+    
+    
+    	?signature a sign:DataIntegrityProof;
+			sign:issuer  <https://publicpod.rubendedecker.be/josd/profile/card#me>;
+   			sign:target ?dataGraph.
+  	}
+    GRAPH ?dataGraph { ?s ?p ?o . }
+}
+
+ */
