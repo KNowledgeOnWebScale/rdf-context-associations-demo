@@ -75,8 +75,8 @@ const ContextInterface = () => {
 
         let selectedPolicy;
         if (policyId !== "None") {
-            selectedPolicy = policyOptions.get(policyId)
-            if(selectedSignatureIdentity) selectedPolicy = { selectedSignatureIdentity, ...{ assigner: selectedSignatureIdentity.webId }}
+            selectedPolicy = policyOptions.get(policyId).policy
+            if(selectedSignatureIdentity) selectedPolicy = { ...selectedPolicy, ...{ assigner: selectedSignatureIdentity.webId }}
         }
 
         let author;
@@ -113,7 +113,6 @@ const ContextInterface = () => {
         }
         const store = await builder.commit()
         const text = await serializeTrigFromStore(store)
-        console.log('OUTPUT', text)
 
         setProcessedDocument(text)
     }

@@ -119,7 +119,7 @@ export function createSimplePolicy(
     // Create Agreement
     const agreementSubject = blankNode()
     policyGraph.push(triple(agreementSubject, namedNode(RDF.type), namedNode(ODRL.Agreement)))
-    policyGraph.push(triple(agreementSubject, namedNode(ODRL.uid), generateUrnUuid()))
+    // policyGraph.push(triple(agreementSubject, namedNode(ODRL.uid), generateUrnUuid()))
     policyGraph.push(triple(agreementSubject, namedNode(ODRL.permission), permissionSubject))
 
 
