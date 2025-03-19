@@ -209,9 +209,7 @@ const ContextInterface = () => {
                 </Typography>
 
                 <Typography textAlign={"left"} sx={{marginBottom: MARGIN}} color="darkblue">
-                    First, an input document must be provided to contextualize.<br />
-                    A placeholder document is provided with my live WebID RDF document,<br />
-                    but any RDF document should do, including Trig, Turtle, JSON-LD, nquads, ntriples.
+                    First, provide an input document to add context information to. This accepts any valid RDF serialization.
                 </Typography>
 
                 <FormControl fullWidth>
@@ -225,9 +223,7 @@ const ContextInterface = () => {
                     />
                     <FormGroup>
                         <Typography textAlign={"left"} sx={{marginTop: MARGIN}} color="darkblue">
-                            If the source document contains quads, these must be converted to blank node graphs. <br />
-                            Checking this checkbox retains the original graph name as the origin of the new graph <br />
-                            in the defined provenance information.
+                            If the source document contains quads, interpret the name as the origin of the graph.
                         </Typography>
                         <FormControlLabel control={<Checkbox checked={originCheckbox} onChange={ handleGraphOriginChange }/>} label="Interpret Graph Names as Origin" />
                     </FormGroup>
@@ -240,9 +236,7 @@ const ContextInterface = () => {
                 </Typography>
 
                 <Typography textAlign={"left"} sx={{marginBottom: MARGIN}} color="darkblue">
-                    Here, a selection of Web Identifiers is provided, that can be used to define <br />
-                    the signing author of the resulting context information. Using their keys, <br />
-                    both the input data and the context graph will be signed.
+                    Define the author defining and signing off on the context information.
                 </Typography>
 
                 <FormControl fullWidth>
@@ -265,14 +259,11 @@ const ContextInterface = () => {
 
             <Box>
                 <Typography  sx={{marginBottom: SMALLMARGIN, marginTop: MARGIN}} variant="h5" textAlign={"left"}>
-                    Defining a usage agreement
+                        Defining a usage agreement
                 </Typography>
                 
                 <Typography textAlign={"left"} sx={{marginBottom: MARGIN}} color="darkblue">
-                    Exchanging personal data, we need to define the purpose for which the data can be used.<br />
-                    The below selection defines policies that impose a time constraint, a set of purposes<br />
-                    for which the associated data can be used, and when chosen sets the above signing author<br />
-                    as the policy issuer.
+                        Define for how long the data that we are about to exchange can be used
                 </Typography>
 
                 <FormControl fullWidth >
@@ -293,7 +284,7 @@ const ContextInterface = () => {
                 </FormControl>
 
                 <Typography textAlign={"left"} sx={{marginBottom: MARGIN, marginTop: MARGIN}} color="darkblue">
-                    The policy purpose defines the allowed purposes for which data can be processed
+                    Define the purpose for which the data that we are about to exchange can be used
                 </Typography>
 
 
@@ -319,12 +310,11 @@ const ContextInterface = () => {
             {/* Provenance provision */}
             <Box>
                 <Typography sx={{marginBottom: MARGIN, marginTop: MARGIN}} variant="h5" textAlign={"left"}>
-                    Provenance context information
+                    Provenance information
                 </Typography>
 
                 <Typography textAlign={"left"} sx={{marginBottom: MARGIN}} color="darkblue">
-                    The provenance information defined on the data is derived from <br />
-                    the datasource provided above and the chosen signing author.
+                    Based on the above choices, the provenance information is auto-filled
                 </Typography>
                 
                 <FormControl fullWidth sx={{marginBottom: MARGIN}}>
@@ -350,6 +340,9 @@ const ContextInterface = () => {
 
             <Box>
                 <br />
+                <Typography textAlign={"left"} sx={{marginBottom: MARGIN}} color="darkblue">
+                    Now commit the above context information to the provided source using RDF Context Associations.
+                </Typography>
                 <FormControl fullWidth>
                     <Box display="flex" gap={2}>
                         <Button variant="contained" sx={{height: "3rem"}} onClick={() => processDocument() }>Commit context information on input</Button>
@@ -362,13 +355,11 @@ const ContextInterface = () => {
                 {/* Text display of the resulting document */}
 
                 <Typography  sx={{marginBottom: SMALLMARGIN, marginTop: MARGIN}} variant="h5" textAlign={"left"}>
-                    Defined context associations
+                    Output resource
                 </Typography>
 
                 <Typography textAlign={"left"} sx={{marginBottom: MARGIN}} color="darkblue">
-                    The Textfield contains the created context associations on the input data.<br/>
-                    The input data is contained in a Blank Node Graph on which the context information<br/>
-                    chosen above is defined.
+                    This textfield contains the created context associations defined on the input source.
                 </Typography>
 
                 <FormControl fullWidth>
@@ -425,7 +416,8 @@ const ContextInterface = () => {
                 </FormControl> */}
 
                 <Typography textAlign={"left"} sx={{marginTop: MARGIN, marginBottom: MARGIN}} color="darkblue">
-                    The resulting document is automatically published on the Web at this location and added to the processing interface
+                    The result was automatically published at location for demo purposes and will be purged regularly.<br />
+                    The result was also added to the processing interface of this demonstrator.
                 </Typography>
 
 

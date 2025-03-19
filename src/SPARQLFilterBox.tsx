@@ -173,8 +173,8 @@ CONSTRUCT {
                 <TextareaAutosize minRows={8} maxRows={20} value={query} />
             </FormControl>
 
-            <Typography textAlign={"left"} sx={{marginBottom: MARGIN}} color="darkblue">
-                Verified signatures:<br />
+            <Typography textAlign={"left"} sx={{marginTop: MARGIN, marginBottom: SMALLMARGIN}} color="darkblue">
+                <b>Verified signatures:</b><br />
             </Typography>
             
             {
