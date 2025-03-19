@@ -2,87 +2,116 @@ import { Box, Button, FormControl, TextareaAutosize, Typography } from "@mui/mat
 import { useState } from "react"
 import { evaluateQuerySync } from "./util/query";
 // import { Quad } from "rdf-js";
-import { serializeTrigFromStore } from "./util/trigUtils";
+import { parseRDFToStore, serializeTrigFromStore } from "./util/trigUtils";
 import { Store } from "n3";
-import { SignatureParams } from "./ProcessingInterface";
+import { pkeyMapping, SignatureParams } from "./ProcessingInterface";
 import { MARGIN, SMALLMARGIN } from "./ContextInterface";
+import { isRDFResource, SIGNATURE } from "./util/util";
+import { RDF } from "@inrupt/vocab-common-rdf";
+import { verifySignature } from "./util/signature/verify";
 
 
 export type FitlerInput = {
     sources: string[],
-    signingAuthor?: SignatureParams,
+    author?: string,
+    keyInfo?: SignatureParams,
     origin?: string,
     purpose?: string,
+    verifySignature: boolean,
 }
 
+type VerificationStatus = {issuer: string, target: string, publicKey: string, status: boolean}
+
 const SPARQLFilterBox = (props: { input: FitlerInput }) =>  {
-    const { sources, signingAuthor, purpose: inputPurpose } = props.input
+    
+    const { sources, author, keyInfo, origin, purpose: inputPurpose, verifySignature: requireSignature } = props.input
 
     const [query, setQuery] = useState<string>('')
-    // const [triples, setTriples] = useState<Quad[]>([])
     const [serialized, setSerialized] = useState<string>("")
+
+    const [verifiedSignatures, setVerifiedSignatures] = useState<VerificationStatus[]>([])
+    
+    //always validate signatures
+    const validateSignatures = true
+    //do we filter on signature
+    const requireAuthorSignature = author && requireSignature
         
     const executeQuery = async(query: string, sources: string[]) => {
-        // for await (const triple of evaluateQuery(sources, query)) {
-        //     // const newTriples = triples.concat( { triple: triple, metadata: undefined })
-        //     // setTriples(newTriples)
-        //     console.log(triple)
-        // }
-        
-        const usedSources = sources.filter(s => !!s)
-        const quads = await evaluateQuerySync(usedSources, query)
+        let newVerificationStatusList: VerificationStatus[] = [];
+        // Load sources to stores
+        let sourceStores: Store[] = []
+        for (let source of sources.filter(s => !!s)) {
+            try {
+                if (!await isRDFResource(source)) throw new Error(`Source ${source} is not a valid RDF resource`)
+                const res = await fetch(source)
+                const text = await res.text()
+                const contentType = await res.headers.get('Content-Type')
+                if (!contentType) throw new Error(`Could not discover content type of ${source}`)
+                sourceStores.push(parseRDFToStore(text, contentType))
+            } catch (e) {
+                alert(`Could not process source ${source}`)
+                return
+            }
+        }
+
+        // evaluate signatures if asked
+        let verifiedStores: Store[] = []
+        if (validateSignatures) {
+            for (let sourceStore of sourceStores) {
+                let newStore = new Store()
+                const signatureQuads = sourceStore.getQuads(null, RDF.type, SIGNATURE.DataIntegrityProof, null)
+                for (let signatureQuad of signatureQuads) {
+                    const signatureSubject = signatureQuad.subject;
+                    const signatureGraph = signatureQuad.graph;
+                    const issuer = sourceStore.getObjects(signatureSubject, SIGNATURE.issuer, signatureGraph)[0]
+                    const target = sourceStore.getObjects(signatureSubject, SIGNATURE.target, signatureGraph)[0]
+                    const proofValue = sourceStore.getObjects(signatureSubject, SIGNATURE.proofValue, signatureGraph)[0]
+                    if (!issuer || !target || !proofValue) { console.error('could not process discovered signature , skipping entry'); continue;}
+                    let publicKey = pkeyMapping.get(issuer.value)
+                    // todo: dynamic key retrieval?
+                    if (!publicKey) { console.error('could not verify public key for discovered signature (these are statically fed to prevent extra requests), skipping entry'); continue;}
+
+                    const verificationResult = await verifySignature(sourceStore, {target, proofValue: proofValue.value, publicKey})
+
+                    newVerificationStatusList.push({issuer: issuer.value, target: target.value, publicKey, status: verificationResult})
+
+                    console.log(`Verification for signature of ${target.value} by ${issuer.value} - status: ${verificationResult}`)
+                    // only include verified signatures by author
+                    if (verificationResult && requireAuthorSignature && issuer.value === keyInfo?.webId) {
+                        newStore.addQuads(sourceStore.getQuads(null, null, null, target))
+                        // todo: also add signature graph to make SPARQL querying work if there are problems?
+                        newStore.addQuads(sourceStore.getQuads(null, null, null, signatureGraph))
+                        console.log(`Adding ${target.value} and signature graph ${signatureGraph} to the query source.`)
+                    }
+                }
+                verifiedStores.push(newStore)
+            }
+        }
+
+        let quads;
+        if (requireSignature) {
+            quads = await evaluateQuerySync(verifiedStores, query)
+        } else {
+            quads = await evaluateQuerySync(sourceStores, query)
+        }
+
+        // evaluate query
         const store = new Store()
         store.addQuads(quads)
         const outputTrig = await serializeTrigFromStore(store)
         console.log("output", outputTrig, quads)
         // setTriples(quads)
         setSerialized(outputTrig || "No output for provided filter options!")
+        setVerifiedSignatures(newVerificationStatusList)
     }
 
     const filterSources = () => {
         const purpose: string | undefined = inputPurpose || undefined
-        const author: string | undefined = (signingAuthor && signingAuthor.webId) || undefined
-        const signature: boolean = !!signingAuthor;
-
-//         let query = 
-// `PREFIX ca: <https://w3id.org/context-associations#>
-// PREFIX pol: <https://example.org/policy#>
-// PREFIX sign: <https://example.org/signature#>
-// PREFIX foaf: <http://xmlns.com/foaf/0.1/>
-// PREFIX odrl: <http://www.w3.org/ns/odrl/2/>
-// PREFIX oac: <https://w3id.org/oac#>
-// PREFIX dpv: <http://www.w3i3.org/dpv#>
-
-// CONSTRUCT { 
-//   ?s ?p ?o . 
-// } WHERE {
-//   	GRAPH ?metadata {`;
-// if(purpose) query +=
-// `  		?policy a oWrl:Agreement;
-//     		odrl:permission ?perm.
-//     	?perm odrl:target ?dataGraph;
-//     		odrl:action odrl:use;`;
-// if(purpose && author) query +=
-// `      		odrl:assigner <${author}>;`;
-// if(purpose) query +=
-// `          	odrl:constraint ?constraint.
-//     	?constraint a odrl:Constraint;
-//             odrl:leftOperand oac:Purpose;
-//             odrl:operator odrl:eq;
-//             odrl:rightOperand <${purpose}>.`;
-// if(signature) query +=    
-// `    	?signature a sign:DataIntegrityProof;`
-// if(signature && author) query +=
-// `			sign:issuer  <${author}>;`;
-// if(signature) query +=    
-// `  			sign:target ?dataGraph.`;
-// query +=             
-// `  	}
-//     GRAPH ?dataGraph { ?s ?p ?o . }
-// }`
+        const author: string | undefined = (keyInfo?.webId) 
 
 let query = 
 `PREFIX ca: <https://w3id.org/context-associations#>
+PREFIX prov: <https://example.org/provenance#>
 PREFIX pol: <https://example.org/policy#>
 PREFIX sign: <https://example.org/signature#>
 PREFIX foaf: <http://xmlns.com/foaf/0.1/>
@@ -94,6 +123,8 @@ CONSTRUCT {
   ?s ?p ?o . 
 } WHERE {
   	GRAPH ?metadata {
+        ${(origin && `?dataGraph prov:origin <${origin}>.`)||""}
+        ${(author && `?dataGraph prov:author <${author}>.`)||""}
         ${(purpose && `?policy a odrl:Agreement;
     		odrl:permission ?perm.
     	?perm odrl:target ?dataGraph;
@@ -105,7 +136,7 @@ CONSTRUCT {
             odrl:operator odrl:eq;
             odrl:rightOperand <${purpose}>.`
         )||""}
-        ${(signature && `?signature a sign:DataIntegrityProof;
+        ${(requireAuthorSignature && `?signature a sign:DataIntegrityProof;
             ${(author && `sign:issuer  <${author}>;`)||""}
             sign:target ?dataGraph.`            
         )||""}
@@ -131,19 +162,38 @@ CONSTRUCT {
             {/* TODO Show SPARQL query used to filter sources */}
 
             <Typography  sx={{marginBottom: SMALLMARGIN, marginTop: MARGIN}} variant="h5" textAlign={"left"}>
-                Evaluated SPARQL query
+                Used SPARQL query
             </Typography>
 
             <Typography textAlign={"left"} sx={{marginBottom: MARGIN}} color="darkblue">
                 This is the SPARQL query created from the filter requirements above.<br />
             </Typography>
-            
+
             <FormControl fullWidth>
                 <TextareaAutosize minRows={8} maxRows={20} value={query} />
             </FormControl>
 
+            <Typography textAlign={"left"} sx={{marginTop: MARGIN, marginBottom: SMALLMARGIN}} color="darkblue">
+                <b>Verified signatures:</b><br />
+            </Typography>
+            
+            {
+                verifiedSignatures.map(v => {
+                    if (v.status) return (
+                        <Typography textAlign={"left"} color={"green"} sx={{marginBottom: SMALLMARGIN}}>
+                            { `Successfully validated signature by ${v.issuer} on target graph ${v.target} using key at ${v.publicKey}`}
+                        </Typography>
+                    ) 
+                    else return (
+                        <Typography textAlign={"left"} color={"red"} sx={{marginBottom: SMALLMARGIN}}>
+                            { `Failed to validated signature by ${v.issuer} on target graph ${v.target} using key at ${v.publicKey}`}
+                        </Typography>
+                    )
+                })
+            }
+
             <Typography  sx={{marginBottom: SMALLMARGIN, marginTop: MARGIN}} variant="h5" textAlign={"left"}>
-                Filtered data
+                Filtered input data
             </Typography>
             
             <Typography textAlign={"left"} sx={{marginTop: MARGIN, marginBottom: MARGIN}} color="darkblue">

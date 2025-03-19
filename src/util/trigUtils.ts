@@ -50,6 +50,12 @@ export async function serializeTrigFromStore (store: Store, beautifyList?: boole
     })
 }
 
+export function parseRDFToStore (content: string, format: string): Store {
+    const store = new Store();
+    store.addQuads(new Parser({ format }).parse(content))
+    return store 
+}
+
 export function parseTrigToStore (content: string): Store {
     const store = new Store();
     store.addQuads(new Parser({ format: 'application/trig' }).parse(content))

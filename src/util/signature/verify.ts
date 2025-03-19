@@ -1,3 +1,30 @@
+import { Store, Term } from "n3";
+import { hashDataGraph, keyParams, signParams } from "./sign";
+const { subtle } = globalThis.crypto;
+import { Buffer } from "buffer"
+
+export type SignatureParams = { proofValue: string, target: Term, publicKey: string, }
+
+export async function verifySignature(store: Store, params: SignatureParams) {
+    const { proofValue, target, publicKey } = params; 
+    const targetGraph = store.getQuads(null, null, null, target)
+    const verification = await subtle.verify(
+        signParams,
+        await importPublicKey(publicKey),
+        Buffer.from(proofValue, 'base64'),
+        await hashDataGraph(targetGraph),
+    );
+    return verification;
+}
+
+
+export async function importPublicKey(keyResource: string) {
+    const key = await (await fetch(keyResource)).text()
+    return subtle.importKey('raw', Buffer.from(key, 'base64'), keyParams, true, ['verify']);
+}
+
+
+
 // import { getResourceAsQuadArray, getResourceAsStore } from "@dexagod/rdf-retrieval";
 // import { importKey, signParams, verifyQuads } from "@jeswr/rdfjs-sign";
 // import { webcrypto } from "crypto";
@@ -165,7 +192,7 @@
 //     const subj = blankNode()
 //     const triples = [
 //         triple(subj, namedNode(RDF.type), namedNode(VerificationOntology.VerificationStatus)),
-//         triple(subj, namedNode(VerificationOntology.status), literal(result.result.toString(), namedNode(XSD.boolean))),
+//         triple(subj, nCan we amedNode(VerificationOntology.status), literal(result.result.toString(), namedNode(XSD.boolean))),
 //         triple(subj, namedNode(VerificationOntology.verifies), result.target),
 //         triple(subj, namedNode(VerificationOntology.issuer), result.issuer),
 //     ]

@@ -19,6 +19,7 @@ import Home from './Home';
 import ContextInterface from './ContextInterface';
 import ProcessingInterface from './ProcessingInterface';
 import Links from './Links';
+// import VisualizationInterface from './VisuallizationInterface';
 
 interface Props {
   /**
@@ -36,6 +37,7 @@ const navItems = new Map<string, { text: string, page: React.FC }>([
     ['home', { text: 'Home', page: Home}],
     ['context', { text: 'Contextualization Interface', page: ContextInterface }],
     ['processing', { text: 'Processing Interface', page: ProcessingInterface}],
+    // ['visualization', { text: 'Visualization Interface', page: VisualizationInterface}],
     ['links', { text: 'Links', page: Links}]  
 ]);
 

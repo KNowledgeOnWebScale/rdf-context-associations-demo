@@ -168,9 +168,9 @@ export class Builder {
             for (let dataGraph of store.getDataGraphs()) {
                 store.addMetadataTriples([ triple(dataGraph, namedNode(PROVENANCE.timestamp), literal(timestamp, namedNode(XSD.dateTime)), ) ])
                 const metadataGraph = store.getMetadataGraph();
-                if (origin && !store.getStore().getQuads(dataGraph, namedNode(PROVENANCE.origin), null, metadataGraph || null)){
+                if (origin && !store.getStore().getQuads(dataGraph, namedNode(PROVENANCE.origin), null, metadataGraph || null).length){
                     store.addMetadataTriples([ quad(dataGraph, namedNode(PROVENANCE.origin), origin) ])
-                }
+                } 
                 if (author) {
                     store.addMetadataTriples([ quad(dataGraph, namedNode(PROVENANCE.author), author) ])
                 }

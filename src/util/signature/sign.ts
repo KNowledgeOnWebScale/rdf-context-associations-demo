@@ -174,7 +174,7 @@ export async function tryCreateGraphSignature(store: Store, graphId: Quad_Graph,
 }
 
 export function importPrivateKey(key: JsonWebKey) {
-  return subtle.importKey('jwk', key, keyParams, true, ['sign']);
+    return subtle.importKey('jwk', key, keyParams, true, ['sign']);
 }
 
 async function signDataGraph(quads: Quad[], privateKey: CryptoKey) {
@@ -184,7 +184,7 @@ async function signDataGraph(quads: Quad[], privateKey: CryptoKey) {
 }
 
 
-async function hashDataGraph(input: Quad[]) {
+export async function hashDataGraph(input: Quad[]) {
     const rdfc10 = new RDFC10(DataFactory);  
 
     // "normalized" is a dataset of quads with canonical blank node labels

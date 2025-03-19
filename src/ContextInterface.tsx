@@ -3,9 +3,10 @@ import { Box, Button, Checkbox, FormControlLabel, FormGroup, FormHelperText, Inp
 import FormControl from '@mui/material/FormControl';
 import { Builder } from "./util/caBuilder";
 import { serializeTrigFromStore } from "./util/trigUtils";
-import { DPV, postResource, putResource } from "./util/util";
+import { DPV, postResource } from "./util/util";
 import { importPrivateKey } from "./util/signature/sign";
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import CreatedResourceStore from "./util/CreatedResources";
 
 export const MARGIN = "1.4em";
 export const SMALLMARGIN = "0.7em";
@@ -80,8 +81,9 @@ const ContextInterface = () => {
     // const [authorId, setAuthorId] = useState("https://pod.rubendedecker.be/profile/card#me")
     // const handleAuthorChange = (event: ChangeEvent<HTMLInputElement>) => { setAuthorId(event.target.value) };
 
-    const [targetId, setTargetId] = useState("https://pod.rubendedecker.be/public")
-    const handleTargetChange = (event: ChangeEvent<HTMLInputElement>) => { setTargetId(event.target.value) };
+    // const [targetId, setTargetId] = useState("https://pod.rubendedecker.be/projects/ca_demo/")
+    // const handleTargetChange = (event: ChangeEvent<HTMLInputElement>) => { setTargetId(event.target.value) };
+    const targetId = "https://pod.rubendedecker.be/projects/ca_demo/"
 
     const [resourceLocation, setResourceLocation] = useState("")
 
@@ -89,6 +91,9 @@ const ContextInterface = () => {
         if (signatureId === "None") return "Select a signature to set the author"
         else return signatureOptions.get(signatureId)?.webId || ""
     }
+
+    const [textCopiedState, setTextCopiedState] = useState(false)
+    const [linkCopiedState, setLinkCopiedState] = useState(false)
 
     // const contextualizedInput = `roots in a piece of classical Latin literature from 45 BC, making it over 2000 years old. 
     //                 Richard McClintock, a Latin professor at Hampden-Sydney College in Virginia, looked up one of the more obscure Latin words, consectetur, from a Lorem Ipsum passage, and going through the cites of the word in classical literature, discovered the undoubtable source. Lorem Ipsum comes from sections 1.10.32 and 1.10.33 of "de Finibus Bonorum et Malorum" (The Extremes of Good and Evil) by Cicero, written in 45 BC. This book is a treatise on the theory of ethics, 
@@ -114,7 +119,7 @@ const ContextInterface = () => {
             selectedPolicy.purpose = [ purposeChoice ]
         } 
         if (signatureChoice) {
-            selectedPolicy.author = signatureChoice?.webId
+            selectedPolicy.assigner = signatureChoice?.webId
         }
 
         let author;
@@ -155,28 +160,42 @@ const ContextInterface = () => {
         const text = await serializeTrigFromStore(store)
 
         setProcessedDocument(text)
+        setTextCopiedState(false)
+        setLinkCopiedState(false)
+        
+        const location = await postResource(targetId, text) || targetId
+        CreatedResourceStore.getInstance().addResourceURL(location)
+        if(location) setResourceLocation(location) 
     }
 
 
     const handleCopyToClipboard = () => {
         navigator.clipboard.writeText(processedDocument)
-            .then(() => alert("Copied to clipboard!"))
+            .then(() => setTextCopiedState(true))
             .catch((err) => console.error("Failed to copy:", err));
     };
 
+    const handleCopyLinkToClipboard = () => {
+        navigator.clipboard.writeText(resourceLocation)
+            .then(() => setLinkCopiedState(true))
+            .catch((err) => console.error("Failed to copy:", err));
+    }
+
     const enableContentInteractions = () => { return !processedDocument}
 
-    const handlePostResource = async () => {
-        const location = await postResource(targetId, processedDocument)
-        if(location) setResourceLocation(location) 
-        else alert("Something went wrong uploading the resource!")
-    }
+    // const handlePostResource = async () => {
+    //     const location = await postResource(targetId, processedDocument) || targetId
+    //     CreatedResourceStore.getInstance().addResourceURL(location)
+    //     if(location) setResourceLocation(location) 
+    //     else alert("Something went wrong uploading the resource!")
+    // }
 
-    const handlePutResource = async () => {
-        const location = await putResource(targetId, processedDocument)
-        if(location) setResourceLocation(location) 
-        else alert("Something went wrong uploading the resource!")
-    }
+    // const handlePutResource = async () => {
+    //     const location = await putResource(targetId, processedDocument) || targetId
+    //     CreatedResourceStore.getInstance().addResourceURL(location)
+    //     if(location) setResourceLocation(location) 
+    //     else alert("Something went wrong uploading the resource!")
+    // }
 
     return ( 
         <Box>
@@ -190,9 +209,7 @@ const ContextInterface = () => {
                 </Typography>
 
                 <Typography textAlign={"left"} sx={{marginBottom: MARGIN}} color="darkblue">
-                    First, an input document must be provided to contextualize.<br />
-                    A placeholder document is provided with my live WebID RDF document,<br />
-                    but any RDF document should do, including Trig, Turtle, JSON-LD, nquads, ntriples.
+                    First, provide an input document to add context information to. This accepts any valid RDF serialization.
                 </Typography>
 
                 <FormControl fullWidth>
@@ -206,9 +223,7 @@ const ContextInterface = () => {
                     />
                     <FormGroup>
                         <Typography textAlign={"left"} sx={{marginTop: MARGIN}} color="darkblue">
-                            If the source document contains quads, these must be converted to blank node graphs. <br />
-                            Checking this checkbox retains the original graph name as the origin of the new graph <br />
-                            in the defined provenance information.
+                            If the source document contains quads, interpret the name as the origin of the graph.
                         </Typography>
                         <FormControlLabel control={<Checkbox checked={originCheckbox} onChange={ handleGraphOriginChange }/>} label="Interpret Graph Names as Origin" />
                     </FormGroup>
@@ -221,9 +236,7 @@ const ContextInterface = () => {
                 </Typography>
 
                 <Typography textAlign={"left"} sx={{marginBottom: MARGIN}} color="darkblue">
-                    Here, a selection of Web Identifiers is provided, that can be used to define <br />
-                    the signing author of the resulting context information. Using their keys, <br />
-                    both the input data and the context graph will be signed.
+                    Define the author defining and signing off on the context information.
                 </Typography>
 
                 <FormControl fullWidth>
@@ -246,14 +259,11 @@ const ContextInterface = () => {
 
             <Box>
                 <Typography  sx={{marginBottom: SMALLMARGIN, marginTop: MARGIN}} variant="h5" textAlign={"left"}>
-                    Defining a usage agreement
+                        Defining a usage agreement
                 </Typography>
                 
                 <Typography textAlign={"left"} sx={{marginBottom: MARGIN}} color="darkblue">
-                    Exchanging personal data, we need to define the purpose for which the data can be used.<br />
-                    The below selection defines policies that impose a time constraint, a set of purposes<br />
-                    for which the associated data can be used, and when chosen sets the above signing author<br />
-                    as the policy issuer.
+                        Define for how long the data that we are about to exchange can be used
                 </Typography>
 
                 <FormControl fullWidth >
@@ -274,7 +284,7 @@ const ContextInterface = () => {
                 </FormControl>
 
                 <Typography textAlign={"left"} sx={{marginBottom: MARGIN, marginTop: MARGIN}} color="darkblue">
-                    The policy purpose defines the allowed purposes for which data can be processed
+                    Define the purpose for which the data that we are about to exchange can be used
                 </Typography>
 
 
@@ -300,12 +310,11 @@ const ContextInterface = () => {
             {/* Provenance provision */}
             <Box>
                 <Typography sx={{marginBottom: MARGIN, marginTop: MARGIN}} variant="h5" textAlign={"left"}>
-                    Provenance context information
+                    Provenance information
                 </Typography>
 
                 <Typography textAlign={"left"} sx={{marginBottom: MARGIN}} color="darkblue">
-                    The provenance information defined on the data is derived from <br />
-                    the datasource provided above and the chosen signing author.
+                    Based on the above choices, the provenance information is auto-filled
                 </Typography>
                 
                 <FormControl fullWidth sx={{marginBottom: MARGIN}}>
@@ -331,9 +340,12 @@ const ContextInterface = () => {
 
             <Box>
                 <br />
+                <Typography textAlign={"left"} sx={{marginBottom: MARGIN}} color="darkblue">
+                    Now commit the above context information to the provided source using RDF Context Associations.
+                </Typography>
                 <FormControl fullWidth>
                     <Box display="flex" gap={2}>
-                        <Button fullWidth variant="contained" sx={{height: "3rem"}} onClick={() => processDocument() }>Commit context information on input</Button>
+                        <Button variant="contained" sx={{height: "3rem"}} onClick={() => processDocument() }>Commit context information on input</Button>
                     </Box>
                 </FormControl>
             </Box>
@@ -343,13 +355,11 @@ const ContextInterface = () => {
                 {/* Text display of the resulting document */}
 
                 <Typography  sx={{marginBottom: SMALLMARGIN, marginTop: MARGIN}} variant="h5" textAlign={"left"}>
-                    Defined context associations
+                    Output resource
                 </Typography>
 
                 <Typography textAlign={"left"} sx={{marginBottom: MARGIN}} color="darkblue">
-                    The Textfield contains the created context associations on the input data.<br/>
-                    The input data is contained in a Blank Node Graph on which the context information<br/>
-                    chosen above is defined.
+                    This textfield contains the created context associations defined on the input source.
                 </Typography>
 
                 <FormControl fullWidth>
@@ -371,11 +381,12 @@ const ContextInterface = () => {
                             Copy to Clipboard
                         </Button>
                     </Box>
+                    <FormHelperText>{textCopiedState ? "Copied text to clipboard!" : ""}</FormHelperText>
                 </FormControl>
             </Box>
 
             <Box>
-                <Typography sx={{marginBottom: MARGIN, marginTop: MARGIN}} variant="h5" textAlign={"left"}>
+                {/* <Typography sx={{marginBottom: MARGIN, marginTop: MARGIN}} variant="h5" textAlign={"left"}>
                     Publish output document on the Web
                 </Typography>
 
@@ -394,7 +405,6 @@ const ContextInterface = () => {
                     />
                 </FormControl>
 
-                {/* CONFIRM BUTTON */}
                 <br />
                 <br />
 
@@ -403,10 +413,11 @@ const ContextInterface = () => {
                         <Button fullWidth variant="contained" onClick={handlePostResource} disabled={enableContentInteractions()}>POST</Button>
                         <Button fullWidth variant="contained" onClick={handlePutResource} disabled={enableContentInteractions()}>PUT</Button>
                     </Box>
-                </FormControl>
+                </FormControl> */}
 
                 <Typography textAlign={"left"} sx={{marginTop: MARGIN, marginBottom: MARGIN}} color="darkblue">
-                    This shows the location to which the resource was published according to its "Location" header.
+                    The result was automatically published at location for demo purposes and will be purged regularly.<br />
+                    The result was also added to the processing interface of this demonstrator.
                 </Typography>
 
 
@@ -417,6 +428,23 @@ const ContextInterface = () => {
                         aria-readonly
                         label={"Published Resource Location"}
                     />
+                </FormControl>
+                <br />
+
+                {/* Copy Button */}
+                <FormControl fullWidth>
+                    <Box display="flex" gap={2}>
+                        <Button 
+                            variant="contained" 
+                            color="primary" 
+                            startIcon={<ContentCopyIcon />} 
+                            onClick={handleCopyLinkToClipboard}
+                            disabled={enableContentInteractions()}
+                        >
+                            Copy Link
+                        </Button>
+                    </Box>
+                    <FormHelperText>{linkCopiedState ? "Copied link to clipboard!" : ""}</FormHelperText>
                 </FormControl>
             </Box>
                 
