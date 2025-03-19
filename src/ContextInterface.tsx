@@ -55,7 +55,7 @@ const durationOptions: Map<string, string | undefined> = new Map([
  
 const ContextInterface = () => {
 
-    const [sourceId, setSourceId] = useState("https://pod.rubendedecker.be/profile/card#me")
+    const [sourceId, setSourceId] = useState("https://pod.rubendedecker.be/profile/card")
     const handleSourceChange = (event: ChangeEvent<HTMLInputElement>) => { 
         setSourceId(event.target.value) 
     };
