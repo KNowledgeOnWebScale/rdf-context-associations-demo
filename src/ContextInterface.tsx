@@ -3,9 +3,10 @@ import { Box, Button, Checkbox, FormControlLabel, FormGroup, FormHelperText, Inp
 import FormControl from '@mui/material/FormControl';
 import { Builder } from "./util/caBuilder";
 import { serializeTrigFromStore } from "./util/trigUtils";
-import { DPV, postResource, putResource } from "./util/util";
+import { DPV, postResource } from "./util/util";
 import { importPrivateKey } from "./util/signature/sign";
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import CreatedResourceStore from "./util/CreatedResources";
 
 export const MARGIN = "1.4em";
 export const SMALLMARGIN = "0.7em";
@@ -80,8 +81,9 @@ const ContextInterface = () => {
     // const [authorId, setAuthorId] = useState("https://pod.rubendedecker.be/profile/card#me")
     // const handleAuthorChange = (event: ChangeEvent<HTMLInputElement>) => { setAuthorId(event.target.value) };
 
-    const [targetId, setTargetId] = useState("https://pod.rubendedecker.be/public")
-    const handleTargetChange = (event: ChangeEvent<HTMLInputElement>) => { setTargetId(event.target.value) };
+    // const [targetId, setTargetId] = useState("https://pod.rubendedecker.be/projects/ca_demo/")
+    // const handleTargetChange = (event: ChangeEvent<HTMLInputElement>) => { setTargetId(event.target.value) };
+    const targetId = "https://pod.rubendedecker.be/projects/ca_demo/"
 
     const [resourceLocation, setResourceLocation] = useState("")
 
@@ -89,6 +91,9 @@ const ContextInterface = () => {
         if (signatureId === "None") return "Select a signature to set the author"
         else return signatureOptions.get(signatureId)?.webId || ""
     }
+
+    const [textCopiedState, setTextCopiedState] = useState(false)
+    const [linkCopiedState, setLinkCopiedState] = useState(false)
 
     // const contextualizedInput = `roots in a piece of classical Latin literature from 45 BC, making it over 2000 years old. 
     //                 Richard McClintock, a Latin professor at Hampden-Sydney College in Virginia, looked up one of the more obscure Latin words, consectetur, from a Lorem Ipsum passage, and going through the cites of the word in classical literature, discovered the undoubtable source. Lorem Ipsum comes from sections 1.10.32 and 1.10.33 of "de Finibus Bonorum et Malorum" (The Extremes of Good and Evil) by Cicero, written in 45 BC. This book is a treatise on the theory of ethics, 
@@ -114,7 +119,7 @@ const ContextInterface = () => {
             selectedPolicy.purpose = [ purposeChoice ]
         } 
         if (signatureChoice) {
-            selectedPolicy.author = signatureChoice?.webId
+            selectedPolicy.assigner = signatureChoice?.webId
         }
 
         let author;
@@ -155,28 +160,42 @@ const ContextInterface = () => {
         const text = await serializeTrigFromStore(store)
 
         setProcessedDocument(text)
+        setTextCopiedState(false)
+        setLinkCopiedState(false)
+        
+        const location = await postResource(targetId, text) || targetId
+        CreatedResourceStore.getInstance().addResourceURL(location)
+        if(location) setResourceLocation(location) 
     }
 
 
     const handleCopyToClipboard = () => {
         navigator.clipboard.writeText(processedDocument)
-            .then(() => alert("Copied to clipboard!"))
+            .then(() => setTextCopiedState(true))
             .catch((err) => console.error("Failed to copy:", err));
     };
 
+    const handleCopyLinkToClipboard = () => {
+        navigator.clipboard.writeText(resourceLocation)
+            .then(() => setLinkCopiedState(true))
+            .catch((err) => console.error("Failed to copy:", err));
+    }
+
     const enableContentInteractions = () => { return !processedDocument}
 
-    const handlePostResource = async () => {
-        const location = await postResource(targetId, processedDocument)
-        if(location) setResourceLocation(location) 
-        else alert("Something went wrong uploading the resource!")
-    }
+    // const handlePostResource = async () => {
+    //     const location = await postResource(targetId, processedDocument) || targetId
+    //     CreatedResourceStore.getInstance().addResourceURL(location)
+    //     if(location) setResourceLocation(location) 
+    //     else alert("Something went wrong uploading the resource!")
+    // }
 
-    const handlePutResource = async () => {
-        const location = await putResource(targetId, processedDocument)
-        if(location) setResourceLocation(location) 
-        else alert("Something went wrong uploading the resource!")
-    }
+    // const handlePutResource = async () => {
+    //     const location = await putResource(targetId, processedDocument) || targetId
+    //     CreatedResourceStore.getInstance().addResourceURL(location)
+    //     if(location) setResourceLocation(location) 
+    //     else alert("Something went wrong uploading the resource!")
+    // }
 
     return ( 
         <Box>
@@ -333,7 +352,7 @@ const ContextInterface = () => {
                 <br />
                 <FormControl fullWidth>
                     <Box display="flex" gap={2}>
-                        <Button fullWidth variant="contained" sx={{height: "3rem"}} onClick={() => processDocument() }>Commit context information on input</Button>
+                        <Button variant="contained" sx={{height: "3rem"}} onClick={() => processDocument() }>Commit context information on input</Button>
                     </Box>
                 </FormControl>
             </Box>
@@ -371,11 +390,12 @@ const ContextInterface = () => {
                             Copy to Clipboard
                         </Button>
                     </Box>
+                    <FormHelperText>{textCopiedState ? "Copied text to clipboard!" : ""}</FormHelperText>
                 </FormControl>
             </Box>
 
             <Box>
-                <Typography sx={{marginBottom: MARGIN, marginTop: MARGIN}} variant="h5" textAlign={"left"}>
+                {/* <Typography sx={{marginBottom: MARGIN, marginTop: MARGIN}} variant="h5" textAlign={"left"}>
                     Publish output document on the Web
                 </Typography>
 
@@ -394,7 +414,6 @@ const ContextInterface = () => {
                     />
                 </FormControl>
 
-                {/* CONFIRM BUTTON */}
                 <br />
                 <br />
 
@@ -403,10 +422,10 @@ const ContextInterface = () => {
                         <Button fullWidth variant="contained" onClick={handlePostResource} disabled={enableContentInteractions()}>POST</Button>
                         <Button fullWidth variant="contained" onClick={handlePutResource} disabled={enableContentInteractions()}>PUT</Button>
                     </Box>
-                </FormControl>
+                </FormControl> */}
 
                 <Typography textAlign={"left"} sx={{marginTop: MARGIN, marginBottom: MARGIN}} color="darkblue">
-                    This shows the location to which the resource was published according to its "Location" header.
+                    The resulting document is automatically published on the Web at this location and added to the processing interface
                 </Typography>
 
 
@@ -417,6 +436,23 @@ const ContextInterface = () => {
                         aria-readonly
                         label={"Published Resource Location"}
                     />
+                </FormControl>
+                <br />
+
+                {/* Copy Button */}
+                <FormControl fullWidth>
+                    <Box display="flex" gap={2}>
+                        <Button 
+                            variant="contained" 
+                            color="primary" 
+                            startIcon={<ContentCopyIcon />} 
+                            onClick={handleCopyLinkToClipboard}
+                            disabled={enableContentInteractions()}
+                        >
+                            Copy Link
+                        </Button>
+                    </Box>
+                    <FormHelperText>{linkCopiedState ? "Copied link to clipboard!" : ""}</FormHelperText>
                 </FormControl>
             </Box>
                 

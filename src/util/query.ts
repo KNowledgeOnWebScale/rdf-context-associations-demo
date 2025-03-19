@@ -1,5 +1,6 @@
 import { Quad } from "rdf-js";
 import { QueryEngine } from '@comunica/query-sparql'
+import { Store } from "n3";
 
 // export async function* evaluateQuery(targets: string[], query: string): AsyncGenerator<Quad, undefined, void> {
 //     const myEngine = new QueryEngine();
@@ -14,7 +15,7 @@ import { QueryEngine } from '@comunica/query-sparql'
 // }
 
 
-export async function evaluateQuerySync(targets: string[], query: string): Promise<Quad[]> {
+export async function evaluateQuerySync(targets: Store[], query: string): Promise<Quad[]> {
     const myEngine = new QueryEngine();
 
     return new Promise(async (resolve, reject) => {
@@ -24,7 +25,7 @@ export async function evaluateQuerySync(targets: string[], query: string): Promi
         const quads: Quad[] = []
 
         myEngine.queryQuads(query, {
-            sources: (targets as [string, ...string[]]),
+            sources: (targets as [Store, ...Store[]]),
         }).then(stream => {
             stream 
                 .on('data', (q: Quad) => quads.push(q) )
