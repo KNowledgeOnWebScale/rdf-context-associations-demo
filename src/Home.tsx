@@ -8,7 +8,7 @@ const Home = () => {
             </Typography>        
             <Typography textAlign={"left"}>
                 This website is the demonstrator for the <a href="https://w3id.org/context-associations/specification">
-                RDF Context Associations</a> submission for the ESWC2015 Demo and Posters track.<br />
+                RDF Context Associations</a> submission for the ESWC2025 Demo and Poster track.<br />
                 <br/>
                 The goal of this demonstrator is to showcase a native RDF solution for defining 
                 associations of context information to target data within the RDF Web ecosystem.
